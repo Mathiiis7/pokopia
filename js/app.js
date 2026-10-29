@@ -11,7 +11,7 @@ let resultat = null;          // dernier calcul des maisons
 let enCours = false;
 let filtreEnv = "tous";       // filtre de la page Maisons (non gardé)
 let filtrePk = { texte: "", vue: "tous" };
-let filtreObjet = { texte: "", gout: "" };
+let filtreObjet = { texte: "", gout: "", sans: false };
 
 // ---------- Outils ----------
 const h = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -23,6 +23,8 @@ const pluriel = (n, un, plusieurs) => `${n} ${n > 1 ? plusieurs : un}`;
 const imgPk = (p, t) => p.img
   ? `<img class="vignette" src="images/pokemon/${p.img}.webp" width="${t}" height="${t}" loading="lazy" alt="">`
   : `<span class="vignette vide-img" style="width:${t}px;height:${t}px" aria-hidden="true"></span>`;
+const imgSaveur = (s, t) => s?.img
+  ? `<img class="vignette" src="images/saveurs/${s.img}.webp" width="${t}" height="${t}" loading="lazy" alt="">` : "";
 const imgObjet = (o, t) => o.img
   ? `<img class="vignette" src="images/objets/${o.img}.webp" width="${t}" height="${t}" loading="lazy" alt="">`
   : `<span class="vignette vide-img" style="width:${t}px;height:${t}px" aria-hidden="true"></span>`;
@@ -48,7 +50,7 @@ function calculer() {
   const e = obtenir();
   const n = ++demande;
   enCours = true;
-  const message = { demande: n, pokemon: pokemonACalculer(e), construites: e.construites, essais: 3000 };
+  const message = { demande: n, pokemon: pokemonACalculer(e), construites: e.construites, exclus: e.sansObjets || [], essais: 3000 };
   if (!travailleur) {
     try {
       travailleur = new Worker(new URL("./calcul.js", import.meta.url), { type: "module" });
@@ -68,7 +70,8 @@ function calculer() {
   } else {
     // sans travailleur (très vieux navigateur) : calcul sur place
     import("./groupes.js").then(({ formerMaisons }) => {
-      const m = formerMaisons(message.pokemon, D.objets, message.construites, message.essais);
+      const exclus = new Set(message.exclus);
+      const m = formerMaisons(message.pokemon, D.objets.filter((o) => !exclus.has(o.id)), message.construites, message.essais);
       resultat = m.map((x) => ({ ...x, habitants: x.habitants.map((p) => p.id), objets: x.objets.map((o) => o.id) }));
       enCours = false;
       afficher();
@@ -98,7 +101,7 @@ function carteMaison(m) {
       <ul class="a-poser">${objets.map((o) => o.libre
         ? `<li><span class="vignette vide-img" style="width:40px;height:40px" aria-hidden="true"></span><span>un ${USAGE[o.usage]} au choix</span></li>`
         : `<li class="${poses.has(o.id) ? "pose" : ""}">${imgObjet(o, 40)}<span>${nomObjet(o)}</span></li>`).join("")}</ul>
-      <p class="donner">À donner une fois : ${saveurs.map((s) => `${h(s.conseil)} (${h(s.saveur)})${saveurs.length > 1 ? " à " + s.noms.map(h).join(", ") : ""}`).join(" ; ")}</p>
+      <div class="donner"><span>À donner une fois :</span>${saveurs.map((s) => `<span class="baie" title="${h(s.conseil)} (${h(s.saveur)})">${imgSaveur(s, 32)}<span>${h(s.conseil)}${saveurs.length > 1 ? ` <span class="pour">→ ${s.noms.map(h).join(", ")}</span>` : ""}</span></span>`).join("")}</div>
       <div class="actions">
         <a class="secondaire" href="#maison/${encodeURIComponent(cle)}">Voir le détail</a>
         ${m.verrouillee ? "" : `<button class="principal" data-construire="${h(cle)}">Je l'ai construite</button>`}
@@ -113,7 +116,7 @@ function groupesSaveur(habitants) {
     if (!parSaveur.has(p.saveur)) parSaveur.set(p.saveur, []);
     parSaveur.get(p.saveur).push(nomPk(p));
   }
-  return [...parSaveur].map(([saveur, noms]) => ({ saveur, conseil: SAV.get(saveur), noms }));
+  return [...parSaveur].map(([saveur, noms]) => ({ saveur, conseil: SAV.get(saveur).conseil, img: SAV.get(saveur).img, noms }));
 }
 
 function maisonsFiltrees() {
@@ -228,6 +231,7 @@ function pageMaison(cle) {
           ${imgObjet(o, 56)}
           <div><label for="pose-${h(o.id)}"><span class="nom">${nomObjet(o)}</span> · ${USAGE[o.usage]} ${teste ? '<span class="teste">testé en jeu</span>' : ""}</label>
             <span class="detail">${utiles.map((g) => h(G.get(g))).join(", ")} → ${pour.map(h).join(", ")}</span>
+            <button class="lien-action" data-sans="${h(o.id)}">Je ne l'ai pas : proposer autre chose</button>
             ${o.obtention?.length || o.materiaux?.length ? `<details><summary>Comment l'avoir</summary><ul>
               ${o.materiaux?.length ? `<li>Fabriquer : ${o.materiaux.map(h).join(", ")}</li>` : ""}
               ${(o.obtention || []).map((x) => `<li>${h(x)}</li>`).join("")}</ul></details>` : ""}
@@ -237,7 +241,7 @@ function pageMaison(cle) {
 
     <section class="panneau">
       <h2>À donner une fois, en main propre</h2>
-      ${saveurs.map((s) => `<p style="margin:6px 0 0"><b>${h(s.conseil)}</b> (goût ${h(s.saveur)}) : ${s.noms.map(h).join(", ")}</p>`).join("")}
+      <ul class="baies">${saveurs.map((s) => `<li>${imgSaveur(s, 56)}<span><b>${h(s.conseil)}</b> <span class="releve">goût ${h(s.saveur)}</span><br>${s.noms.map(h).join(", ")}</span></li>`).join("")}</ul>
     </section>
 
     <div class="actions">
@@ -257,7 +261,7 @@ function lignePk(p, coches) {
     <span class="corps">
       <span class="ligne1"><span class="nom">${h(nomPk(p))}</span><span class="releve">n° ${p.num}${p.groupe === "dlc" ? " · DLC" : p.groupe === "evenement" ? " · événement" : ""}</span></span>
       <span class="gouts">${p.gouts.map((g) => `<span class="gout">${h(G.get(g))}</span>`).join("")}</span>
-      <span class="saveur">${p.saveur ? `Goût ${h(p.saveur)} : ${h(SAV.get(p.saveur))}` : "Saveur inconnue"}</span>
+      <span class="saveur">${p.saveur ? `Goût ${h(p.saveur)} : ${imgSaveur(SAV.get(p.saveur), 28)}${h(SAV.get(p.saveur).conseil)}` : "Saveur inconnue"}</span>
       ${p.a_verifier.length ? `<span class="alerte">À vérifier en jeu : ${h(p.a_verifier.join(", "))}</span>` : ""}
     </span></label></li>`;
 }
@@ -326,8 +330,10 @@ partage.surStatut((t) => { const el = page.querySelector("[data-statut-partage]"
 function pageObjets() {
   const t = sansAccent(filtreObjet.texte.trim());
   const g = filtreObjet.gout;
+  const sans = new Set(obtenir().sansObjets || []);
   const liste = D.objets
     .filter((o) => o.usage && USAGE[o.usage])
+    .filter((o) => !filtreObjet.sans || sans.has(o.id))
     .filter((o) => (!g || o.gouts.includes(g)) && (!t || sansAccent(o.fr || "").includes(t) || sansAccent(o.en || "").includes(t)))
     .sort((a, b) => (g ? (b.testes.includes(g) - a.testes.includes(g)) : 0) || b.gouts.length - a.gouts.length || (a.fr || a.en).localeCompare(b.fr || b.en));
   const montres = liste.slice(0, 60);
@@ -343,12 +349,17 @@ function pageObjets() {
     <label class="champ">Chercher un objet
       <input type="search" data-cherche-objet value="${h(filtreObjet.texte)}" placeholder="Lit, banc, lampe…" autocomplete="off">
     </label>
+    <div class="jetons" role="group" aria-label="Afficher">
+      <button class="jeton" data-objets-sans="non" aria-pressed="${!filtreObjet.sans}">Tous</button>
+      <button class="jeton" data-objets-sans="oui" aria-pressed="${filtreObjet.sans}">Ceux que je n'ai pas<span class="releve">${sans.size}</span></button>
+    </div>
     <p class="resume">${pluriel(liste.length, "objet", "objets")}${liste.length > montres.length ? ` · les ${montres.length} premiers` : ""}</p>
     <div class="objets-grille">${montres.map((o) => `
-      <article class="carte-objet">
+      <article class="carte-objet${sans.has(o.id) ? " absent" : ""}">
         <div class="tete">${imgObjet(o, 56)}<span class="nom"><b>${nomObjet(o)}</b></span><span class="releve">${USAGE[o.usage]}</span></div>
         <div class="gouts">${o.gouts.map((x) => `<span class="gout${x === g ? " commun" : ""}">${h(G.get(x))}</span>`).join("")}</div>
         ${o.testes.length ? `<span class="teste">testé en jeu : ${o.testes.map((x) => h(G.get(x))).join(", ")}</span>` : ""}
+        <button class="lien-action" data-sans="${h(o.id)}">${sans.has(o.id) ? "Je l'ai maintenant" : "Je ne l'ai pas"}</button>
       </article>`).join("")}</div>
     ${sources()}`;
 }
@@ -404,6 +415,17 @@ page.addEventListener("click", (ev) => {
     navigator.clipboard?.writeText(partage.lienPartie()).then(() => { b.textContent = "Lien copié"; }, () => { b.textContent = partage.lienPartie(); });
     return;
   }
+  if (b.dataset.sans) {
+    const id = b.dataset.sans;
+    changer((e) => {
+      const l = new Set(e.sansObjets || []);
+      if (l.has(id)) l.delete(id); else l.add(id);
+      e.sansObjets = [...l];
+    });
+    calculer();
+    return;
+  }
+  if (b.dataset.objetsSans) { filtreObjet.sans = b.dataset.objetsSans === "oui"; afficher(); return; }
   if (b.dataset.mode) { changer((e) => { e.mode = b.dataset.mode; }); resultat = null; filtreEnv = "tous"; calculer(); }
   else if (b.dataset.env) { filtreEnv = b.dataset.env; afficher(); }
   else if (b.dataset.vue) { filtrePk.vue = b.dataset.vue; afficher(); }
@@ -475,7 +497,7 @@ async function demarrer() {
   for (const o of D.objets) O.set(o.id, o);
   for (const g of D.gouts) G.set(g.id, g.fr || g.en);
   for (const e of D.environnements) ENV.set(e.id, e);
-  for (const s of D.saveurs) SAV.set(s.id, s.conseil);
+  for (const s of D.saveurs) SAV.set(s.id, s);
   partage.demarrer(); // avant le premier affichage : il peut lire un lien …#partie/CODE
   routePrecedente = location.hash;
   afficher();

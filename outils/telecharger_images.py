@@ -19,7 +19,7 @@ RACINE = ICI.parent
 SOURCES = json.loads((ICI / "cache" / "images-sources.json").read_text(encoding="utf-8"))
 BRUT = ICI / "cache" / "images"
 AGENT = "Mozilla/5.0 (guide perso Pokopia, une requete par seconde)"
-TAILLES = {"pokemon": 96, "objets": 80}
+TAILLES = {"pokemon": 96, "objets": 80, "saveurs": 64}
 
 
 def telecharger(url):

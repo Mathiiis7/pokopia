@@ -223,7 +223,9 @@ def main():
 
     # ---- saveurs
     noms_fr = {cle(o["name"]): pg_fr[o["id"]]["name"] for o in PG["objets_en"] if o["id"] in pg_fr}
-    saveurs = [{"id": fr, "en": en, "conseil": noms_fr.get(cle(conseil), conseil)} for en, (fr, conseil) in SAVEURS.items()]
+    saveurs = [{"id": fr, "en": en, "conseil": noms_fr.get(cle(conseil), conseil),
+                "_src": [f"{SEREBII_BASE}/pokemonpokopia/items/{cle(conseil)}.png"]}
+               for en, (fr, conseil) in SAVEURS.items()]
 
     liste_objets = []
     for o in sorted(objets.values(), key=lambda o: (o["fr"] or o["en"] or o["id"]).lower()):
@@ -249,8 +251,8 @@ def main():
     }
     SORTIE.parent.mkdir(exist_ok=True)
     # images : l'adresse d'origine part dans le cache ; l'appli sait seulement si le fichier existe
-    sources = {"pokemon": {}, "objets": {}}
-    for genre, liste_ in (("pokemon", donnees["pokemon"]), ("objets", donnees["objets"])):
+    sources = {"pokemon": {}, "objets": {}, "saveurs": {}}
+    for genre, liste_ in (("pokemon", donnees["pokemon"]), ("objets", donnees["objets"]), ("saveurs", donnees["saveurs"])):
         for x in liste_:
             fichier = cle(x["id"])
             sources[genre][fichier] = [u for u in dict.fromkeys(x.pop("_src")) if u]

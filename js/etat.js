@@ -7,6 +7,7 @@ const DEFAUT = {
   coches: [],         // ids des Pokémon obtenus
   construites: [],    // maisons bloquées : listes d'ids
   poses: {},          // clé de maison -> ids des objets posés
+  sansObjets: [],     // objets que Mathis n'a pas : le calcul en propose d'autres
   mode: "mes",        // « mes » : mes Pokémon cochés ; « tout » : tout le jeu
   dlc: false,         // montrer les Pokémon de la zone DLC (Bubbly Basin)
   modifie: 0,         // horodatage de la dernière modification

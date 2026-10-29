@@ -268,3 +268,17 @@ h2 { margin: 0; font-size: 19px; font-weight: 800; letter-spacing: -0.02em; }
   font-family: var(--mono); font-size: 15px; background: var(--releve); border-radius: var(--r-md);
   padding: 10px 14px; overflow-wrap: anywhere; user-select: all;
 }
+
+/* ---------- Baies à donner, objets que je n'ai pas ---------- */
+.donner { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+.baie { display: inline-flex; align-items: center; gap: 6px; color: var(--encre); }
+.baie .pour { color: var(--encre-2); }
+.baies { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 10px; }
+.baies li { display: flex; align-items: center; gap: 12px; }
+.pk .saveur { display: flex; align-items: center; gap: 6px; }
+.lien-action {
+  border: 0; background: none; padding: 0; min-height: 36px; color: var(--accent);
+  font-size: 14px; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; text-align: left;
+}
+.lien-action:hover { color: var(--accent-fonce); }
+.carte-objet.absent { opacity: .6; }
