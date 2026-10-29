@@ -282,3 +282,34 @@ h2 { margin: 0; font-size: 19px; font-weight: 800; letter-spacing: -0.02em; }
 }
 .lien-action:hover { color: var(--accent-fonce); }
 .carte-objet.absent { opacity: .6; }
+
+/* ---------- Icônes des goûts (JoeNesTeam), nom au survol ou au toucher ---------- */
+body { overflow-x: clip; }
+.icones { display: inline-flex; flex-wrap: wrap; gap: 4px; vertical-align: middle; }
+.ico-gout {
+  position: relative; display: inline-grid; place-items: center; flex: none;
+  width: 36px; height: 36px; border-radius: 50%; cursor: help; outline-offset: 1px;
+  font-size: 12.5px; font-weight: 700; background: var(--releve);
+}
+.ico-gout img { width: 32px; height: 32px; display: block; }
+.ico-gout.commun { box-shadow: 0 0 0 3px var(--accent); }
+.ico-gout.ok-jeu::before {
+  content: ""; position: absolute; left: 8px; right: 8px; bottom: -4px; height: 3px;
+  border-radius: var(--pilule); background: var(--fini);
+}
+.ico-gout::after {
+  content: attr(data-nom); position: absolute; z-index: 10; bottom: calc(100% + 6px); left: 50%;
+  transform: translateX(-50%) translateY(4px); opacity: 0; pointer-events: none;
+  white-space: nowrap; font-size: 13px; font-weight: 600; line-height: 1.2;
+  padding: 6px 10px; border-radius: var(--r-sm); background: var(--encre); color: var(--papier);
+  box-shadow: var(--ombre); transition: opacity .15s var(--doux), transform .15s var(--doux);
+}
+.ico-gout:hover::after, .ico-gout:focus-visible::after, .ico-gout:focus::after { opacity: 1; transform: translateX(-50%); }
+.tableau td .ico-gout { width: 34px; height: 34px; }
+.tableau td:first-child { width: 44px; }
+.objet-ligne .detail { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 4px; }
+/* dans le tableau (qui défile de côté), la bulle s'ouvre à droite de l'icône */
+.tableau td:first-child .ico-gout::after {
+  bottom: auto; top: 50%; left: calc(100% + 8px); transform: translateY(-50%) translateX(-4px);
+}
+.tableau td:first-child .ico-gout:hover::after, .tableau td:first-child .ico-gout:focus::after { transform: translateY(-50%); }

@@ -23,6 +23,14 @@ const pluriel = (n, un, plusieurs) => `${n} ${n > 1 ? plusieurs : un}`;
 const imgPk = (p, t) => p.img
   ? `<img class="vignette" src="images/pokemon/${p.img}.webp" width="${t}" height="${t}" loading="lazy" alt="">`
   : `<span class="vignette vide-img" style="width:${t}px;height:${t}px" aria-hidden="true"></span>`;
+// goût : son icône seule ; le nom s'affiche au survol (ordinateur) ou au toucher (téléphone)
+const IMG_GOUT = new Map();
+const icone = (g, extra = "") => {
+  const nom = h(G.get(g));
+  const img = IMG_GOUT.get(g);
+  return `<span class="ico-gout${extra}" tabindex="0" role="img" aria-label="${nom}" data-nom="${nom}">${img
+    ? `<img src="images/gouts/${img}.webp" width="32" height="32" alt="">` : nom.slice(0, 2)}</span>`;
+};
 const imgSaveur = (s, t) => s?.img
   ? `<img class="vignette" src="images/saveurs/${s.img}.webp" width="${t}" height="${t}" loading="lazy" alt="">` : "";
 const imgObjet = (o, t) => o.img
@@ -187,7 +195,7 @@ function pageMaison(cle) {
       <thead><tr><th scope="col">Goût</th>${habitants.map((p) => `<th scope="col" title="${h(nomPk(p))}">${imgPk(p, 44)}<span class="nom-court">${h(court(p))}</span></th>`).join("")}</tr></thead>
       <tbody>${gouts.map((g) => {
         const pris = habitants.some((p, k) => couvert(k, g));
-        return `<tr class="${pris ? "" : "non-couvert"}"><td>${h(G.get(g))}</td>${habitants.map((p, k) =>
+        return `<tr class="${pris ? "" : "non-couvert"}"><td>${icone(g)}</td>${habitants.map((p, k) =>
           `<td>${p.gouts.includes(g) ? (couvert(k, g) ? '<span class="point" role="img" aria-label="couvert"></span>' : '<span class="point manque" role="img" aria-label="pas couvert"></span>') : ""}</td>`).join("")}</tr>`;
       }).join("")}</tbody>
       <tfoot><tr><td>Total</td>${habitants.map((p, k) => {
@@ -230,7 +238,7 @@ function pageMaison(cle) {
           <input type="checkbox" id="pose-${h(o.id)}" data-pose="${h(o.id)}" ${poses.has(o.id) ? "checked" : ""}>
           ${imgObjet(o, 56)}
           <div><label for="pose-${h(o.id)}"><span class="nom">${nomObjet(o)}</span> · ${USAGE[o.usage]} ${teste ? '<span class="teste">testé en jeu</span>' : ""}</label>
-            <span class="detail">${utiles.map((g) => h(G.get(g))).join(", ")} → ${pour.map(h).join(", ")}</span>
+            <span class="detail"><span class="icones">${utiles.map((g) => icone(g)).join("")}</span> → ${pour.map(h).join(", ")}</span>
             <button class="lien-action" data-sans="${h(o.id)}">Je ne l'ai pas : proposer autre chose</button>
             ${o.obtention?.length || o.materiaux?.length ? `<details><summary>Comment l'avoir</summary><ul>
               ${o.materiaux?.length ? `<li>Fabriquer : ${o.materiaux.map(h).join(", ")}</li>` : ""}
@@ -260,7 +268,7 @@ function lignePk(p, coches) {
     ${imgPk(p, 56)}
     <span class="corps">
       <span class="ligne1"><span class="nom">${h(nomPk(p))}</span><span class="releve">n° ${p.num}${p.groupe === "dlc" ? " · DLC" : p.groupe === "evenement" ? " · événement" : ""}</span></span>
-      <span class="gouts">${p.gouts.map((g) => `<span class="gout">${h(G.get(g))}</span>`).join("")}</span>
+      <span class="gouts icones">${p.gouts.map((g) => icone(g)).join("")}</span>
       <span class="saveur">${p.saveur ? `Goût ${h(p.saveur)} : ${imgSaveur(SAV.get(p.saveur), 28)}${h(SAV.get(p.saveur).conseil)}` : "Saveur inconnue"}</span>
       ${p.a_verifier.length ? `<span class="alerte">À vérifier en jeu : ${h(p.a_verifier.join(", "))}</span>` : ""}
     </span></label></li>`;
@@ -357,8 +365,8 @@ function pageObjets() {
     <div class="objets-grille">${montres.map((o) => `
       <article class="carte-objet${sans.has(o.id) ? " absent" : ""}">
         <div class="tete">${imgObjet(o, 56)}<span class="nom"><b>${nomObjet(o)}</b></span><span class="releve">${USAGE[o.usage]}</span></div>
-        <div class="gouts">${o.gouts.map((x) => `<span class="gout${x === g ? " commun" : ""}">${h(G.get(x))}</span>`).join("")}</div>
-        ${o.testes.length ? `<span class="teste">testé en jeu : ${o.testes.map((x) => h(G.get(x))).join(", ")}</span>` : ""}
+        <div class="gouts icones">${o.gouts.map((x) => icone(x, (x === g ? " commun" : "") + (o.testes.includes(x) ? " ok-jeu" : ""))).join("")}</div>
+        ${o.testes.length ? `<span class="teste">testé en jeu (goûts soulignés)</span>` : ""}
         <button class="lien-action" data-sans="${h(o.id)}">${sans.has(o.id) ? "Je l'ai maintenant" : "Je ne l'ai pas"}</button>
       </article>`).join("")}</div>
     ${sources()}`;
@@ -495,7 +503,7 @@ async function demarrer() {
   }
   for (const p of D.pokemon) P.set(p.id, p);
   for (const o of D.objets) O.set(o.id, o);
-  for (const g of D.gouts) G.set(g.id, g.fr || g.en);
+  for (const g of D.gouts) { G.set(g.id, g.fr || g.en); IMG_GOUT.set(g.id, g.img); }
   for (const e of D.environnements) ENV.set(e.id, e);
   for (const s of D.saveurs) SAV.set(s.id, s);
   partage.demarrer(); // avant le premier affichage : il peut lire un lien …#partie/CODE

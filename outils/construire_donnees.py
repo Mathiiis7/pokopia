@@ -77,7 +77,10 @@ def main():
     # ---- goûts
     fr_par_en = {r["en"]: orthographe(r["fr"]) for r in CORR.values()}
     icone_vers_en = {i: r["en"] for i, r in CORR.items()}
-    gouts = [{"id": k, "en": g["titre"].replace(" Favorites", ""), "fr": fr_par_en.get(k)}
+    # icône de chaque goût : celle du tableau de JoeNesTeam (même dessin pour tous ses objets)
+    icone_par_en = {r["en"]: i for i, r in CORR.items()}
+    gouts = [{"id": k, "en": g["titre"].replace(" Favorites", ""), "fr": fr_par_en.get(k),
+              "_src": [f"https://www.joenesteam.fr/wp-content/uploads/2026/04/{icone_par_en[k]}.png"] if k in icone_par_en else []}
              for k, g in sorted(SER["gouts"].items())]
 
     # ---- objets : base Pokopia Guide (noms fr/en), goûts Serebii + JoeNesTeam
@@ -251,8 +254,9 @@ def main():
     }
     SORTIE.parent.mkdir(exist_ok=True)
     # images : l'adresse d'origine part dans le cache ; l'appli sait seulement si le fichier existe
-    sources = {"pokemon": {}, "objets": {}, "saveurs": {}}
-    for genre, liste_ in (("pokemon", donnees["pokemon"]), ("objets", donnees["objets"]), ("saveurs", donnees["saveurs"])):
+    sources = {"pokemon": {}, "objets": {}, "saveurs": {}, "gouts": {}}
+    for genre, liste_ in (("pokemon", donnees["pokemon"]), ("objets", donnees["objets"]),
+                          ("saveurs", donnees["saveurs"]), ("gouts", donnees["gouts"])):
         for x in liste_:
             fichier = cle(x["id"])
             sources[genre][fichier] = [u for u in dict.fromkeys(x.pop("_src")) if u]
