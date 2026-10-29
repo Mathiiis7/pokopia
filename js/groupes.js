@@ -277,7 +277,7 @@ export function formerMaisons(pokemon, objets, verrouillees = [], essaisFinition
   for (const v of verrouillees) {
     const habitants = v.habitants.map((id) => parId.get(id)).filter(Boolean);
     if (!habitants.length) continue;
-    // un objet que Mathis n'a pas (absent de la liste reçue) : on rechoisit les objets de la maison
+    // un objet qui n'est plus dans les données (après une mise à jour) : on rechoisit les objets
     const manquant = v.objets?.some((id) => !id.startsWith("libre-") && !parIdObjet.has(id));
     const fixes = manquant ? null : v.objets?.map((id) => parIdObjet.get(id) || { id, usage: id.replace("libre-", ""), gouts: [], testes: [], libre: true });
     // une maison construite garde ses objets : on ne fait que recompter ce qu'ils couvrent

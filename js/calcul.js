@@ -5,9 +5,7 @@ let objets = null;
 
 self.onmessage = ({ data }) => {
   if (data.objets) objets = data.objets;
-  // objets que Mathis n'a pas : le calcul fait sans eux
-  const exclus = new Set(data.exclus || []);
-  const maisons = formerMaisons(data.pokemon, objets.filter((o) => !exclus.has(o.id)), data.construites, data.essais);
+  const maisons = formerMaisons(data.pokemon, objets, data.construites, data.essais);
   // on ne renvoie que des ids : la page retrouve Pokémon et objets dans ses données
   self.postMessage({
     demande: data.demande,

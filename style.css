@@ -281,7 +281,6 @@ h2 { margin: 0; font-size: 19px; font-weight: 800; letter-spacing: -0.02em; }
   font-size: 14px; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; text-align: left;
 }
 .lien-action:hover { color: var(--accent-fonce); }
-.carte-objet.absent { opacity: .6; }
 
 /* ---------- Icônes des goûts (JoeNesTeam), nom au survol ou au toucher ---------- */
 body { overflow-x: clip; }

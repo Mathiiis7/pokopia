@@ -8,7 +8,7 @@ Mis à jour le 29/10/2026.
 - Images de tous les Pokémon (369) et objets (735), 5 Mo en tout.
 - **Partage entre appareils branché** sur Supabase (projet `xcundtthsdsftbrdxbhf`, clé publique dans `js/config.js`) et testé en ligne. Deux parties d'essai laissées dans la table `parties` (codes `essai-claude-…` et `v9cbXQ…`) : sans effet, supprimables dans Table Editor.
 
-- Ajouté le 29/10 au soir : image de la baie à donner ; bouton « Je ne l'ai pas » sur chaque objet (détail d'une maison et page Objets, liste dans `sansObjets`) : le calcul refait la liste sans ces objets, maisons construites comprises, et chacun reste à 4/5 au moins (vérifié trois refus de suite).
+- Ajouté le 29/10 au soir : image de la baie à donner ; icônes des goûts ; cartes compactes (revue `docs/revue-usage.md`, points 1 à 11 faits) ; **toucher un objet dans le détail montre tout ce qui peut le remplacer** (seul, ou à deux si aucun ne suffit), le choix est gardé par maison (`choix` dans l'état). « Je ne l'ai pas » a été retiré à la demande de Mathis : il voulait surtout choisir un objet plus simple, et l'ancien marquage est effacé au chargement.
 - Question ouverte : un lit par Pokémon ou un seul ? La seule preuve (vidéo [A] de JoeNesTeam) : un lit pour deux grands Pokémon a suffi. Pas vérifié pour 4.
 
 ## Ce qui reste (rien d'obligatoire)

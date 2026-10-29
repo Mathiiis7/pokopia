@@ -7,7 +7,6 @@ const DEFAUT = {
   coches: [],         // ids des Pokémon obtenus
   construites: [],    // maisons bloquées : listes d'ids
   poses: {},          // clé de maison -> ids des objets posés
-  sansObjets: [],     // objets que Mathis n'a pas : le calcul en propose d'autres
   choix: {},          // clé de maison -> objets choisis à la main (remplaçants)
   mode: "mes",        // « mes » : mes Pokémon cochés ; « tout » : tout le jeu
   dlc: false,         // montrer les Pokémon de la zone DLC (Bubbly Basin)
@@ -20,10 +19,16 @@ const abonnes = new Set();
 function lire() {
   try {
     const brut = localStorage.getItem(CLE);
-    return brut ? { ...DEFAUT, ...JSON.parse(brut) } : { ...DEFAUT };
+    return brut ? nettoyer(JSON.parse(brut)) : { ...DEFAUT };
   } catch {
     return { ...DEFAUT };
   }
+}
+
+// « Je ne l'ai pas » n'existe plus (29/10/2026) : les objets marqués redeviennent disponibles.
+function nettoyer(e) {
+  const { sansObjets, ...reste } = e;
+  return { ...DEFAUT, ...reste };
 }
 
 function ecrire() {
@@ -46,7 +51,7 @@ export function changer(modif) {
 
 // Remplace tout l'état (venu d'un autre appareil).
 export function remplacer(nouveau) {
-  etat = { ...DEFAUT, ...nouveau };
+  etat = nettoyer(nouveau);
   ecrire();
   for (const f of abonnes) f(etat, "distant");
 }
