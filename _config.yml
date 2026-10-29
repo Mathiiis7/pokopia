@@ -1,0 +1,8 @@
+# GitHub Pages : ce qui ne doit pas être mis en ligne (reste sur GitHub)
+exclude:
+  - CLAUDE.md
+  - en-cours.md
+  - docs/
+  - outils/
+  - archives/
+  - js/package.json   # ne sert qu'aux essais du calcul avec node

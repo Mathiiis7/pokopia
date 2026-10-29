@@ -1,0 +1,270 @@
+/* Pokopia : charte graphique des projets perso (qg/structure/charte-graphique.md), vert forêt. */
+
+@font-face {
+  font-family: "Figtree"; font-style: normal; font-weight: 400 800; font-display: swap;
+  src: url(polices/figtree-latin.woff2) format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "DM Mono"; font-style: normal; font-weight: 400; font-display: swap;
+  src: url(polices/dm-mono-latin.woff2) format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+:root {
+  --papier: #f6f8f6;
+  --surface: #ffffff;
+  --releve: #e9eeea;
+  --releve-2: #dde5e0;
+  --encre: #15201b;
+  --encre-2: #5c6a63;
+  --filet: #d8e0da;
+  --accent: #1d6b4f;
+  --accent-fonce: color-mix(in srgb, var(--accent) 72%, #000);
+  --accent-pale: color-mix(in srgb, var(--accent) 15%, #fff);
+  --sur-accent: #ffffff;
+  --aplat: #1d6b4f;
+  --sur-aplat: #ffffff;
+  --prio: #c2410c;
+  --fini: #16a34a;
+  --ombre: 0 1px 2px rgb(21 32 27 / .05), 0 8px 22px rgb(21 32 27 / .07);
+  --ombre-survol: 0 2px 4px rgb(21 32 27 / .07), 0 14px 30px rgb(21 32 27 / .12);
+  --sans: "Figtree", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --mono: "DM Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --r-sm: 8px; --r-md: 12px; --r-lg: 16px; --r-xl: 22px; --pilule: 999px;
+  --doux: cubic-bezier(.16, 1, .3, 1);
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --papier: #0d1411; --surface: #141d19; --releve: #1b2621; --releve-2: #24312b;
+    --encre: #e6ede9;
+    --encre-2: #9aaba2;
+    --filet: #26332d;
+    --accent: #5fbf94;
+    --accent-fonce: color-mix(in srgb, var(--accent) 45%, #fff);
+    --accent-pale: color-mix(in srgb, var(--accent) 25%, #0d1411);
+    --sur-accent: #0d1411;
+    --aplat: #1d6b4f;
+    --sur-aplat: #ffffff;
+    --prio: #fb923c; --fini: #4ade80;
+    --ombre: 0 1px 2px rgb(0 0 0 / .3), 0 8px 22px rgb(0 0 0 / .25);
+    --ombre-survol: 0 2px 4px rgb(0 0 0 / .35), 0 14px 30px rgb(0 0 0 / .35);
+    color-scheme: dark;
+  }
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; background: var(--papier); color: var(--encre);
+  font: 16px/1.5 var(--sans);
+  -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent;
+}
+button, input, select { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: var(--r-sm); }
+a { color: var(--accent); }
+
+/* ---------- Navigation en capsule, collante en haut ---------- */
+.capsule {
+  position: sticky; top: calc(10px + env(safe-area-inset-top)); z-index: 5;
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px;
+  max-width: 460px; margin: calc(10px + env(safe-area-inset-top)) auto 0; width: calc(100% - 32px);
+  padding: 5px; background: var(--surface); border-radius: var(--pilule); box-shadow: var(--ombre);
+}
+.capsule a {
+  min-height: 44px; display: grid; place-items: center; border-radius: var(--pilule);
+  color: var(--encre); text-decoration: none; font-weight: 600; font-size: 15px;
+  transition: background-color .25s var(--doux);
+}
+.capsule a:hover { background: var(--releve); }
+.capsule a[aria-current="page"] { background: var(--aplat); color: var(--sur-aplat); }
+
+main { max-width: 760px; margin: 0 auto; padding: 22px 16px calc(40px + env(safe-area-inset-bottom)); outline: none; }
+.attente { color: var(--encre-2); text-align: center; margin-top: 30vh; }
+
+/* ---------- Titres : le filet vert est la signature ---------- */
+h1 { margin: 0 0 18px; font-size: 32px; font-weight: 800; letter-spacing: -0.032em; line-height: 1.05; }
+h1::after {
+  content: ""; display: block; width: 68px; height: 3px; border-radius: var(--pilule);
+  background: var(--accent); margin-top: 12px;
+}
+h2 { margin: 0; font-size: 19px; font-weight: 800; letter-spacing: -0.02em; }
+.section-titre { display: flex; align-items: center; gap: 10px; margin: 26px 0 10px; }
+.section-titre::after { content: ""; flex: 1; height: 1px; background: var(--filet); }
+.compteur, .releve {
+  font-family: var(--mono); font-size: 12.5px; color: var(--encre-2);
+}
+.compteur { background: var(--accent-pale); color: var(--accent-fonce); padding: 2px 9px; border-radius: var(--pilule); }
+
+/* ---------- Boutons et jetons ---------- */
+.principal, .secondaire {
+  border: 0; border-radius: var(--pilule); padding: 10px 18px; min-height: 44px;
+  font-weight: 600; font-size: 15px; text-decoration: none;
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  transition: background-color .25s var(--doux), transform .25s var(--doux);
+}
+.principal { background: var(--aplat); color: var(--sur-aplat); }
+.principal:hover { background: var(--encre); color: var(--papier); transform: translateY(-1px); }
+.secondaire { background: var(--releve); color: var(--encre); }
+.secondaire:hover { background: var(--releve-2); transform: translateY(-1px); }
+
+.bascule {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px;
+  padding: 4px; background: var(--releve); border-radius: var(--pilule); margin-bottom: 12px;
+}
+.bascule button {
+  min-height: 44px; border: 0; border-radius: var(--pilule); background: none;
+  font-weight: 600; font-size: 15px; color: var(--encre-2);
+}
+.bascule button[aria-pressed="true"] { background: var(--surface); color: var(--encre); box-shadow: var(--ombre); }
+
+.jetons { display: flex; gap: 8px; overflow-x: auto; padding: 2px 0 6px; scrollbar-width: none; }
+.jetons::-webkit-scrollbar { display: none; }
+.jeton {
+  flex: none; min-height: 40px; padding: 8px 14px; border: 0; border-radius: var(--pilule);
+  background: var(--releve); font-size: 14px; font-weight: 600; white-space: nowrap;
+}
+.jeton[aria-pressed="true"] { background: var(--aplat); color: var(--sur-aplat); }
+.jeton .releve { margin-left: 4px; color: inherit; opacity: .8; }
+
+.gout {
+  display: inline-block; font-size: 13px; padding: 3px 10px; border-radius: var(--pilule);
+  background: var(--releve); white-space: nowrap;
+}
+.gout.commun { background: var(--accent-pale); color: var(--accent-fonce); font-weight: 600; }
+.env {
+  font-family: var(--mono); font-size: 12.5px; padding: 3px 10px; border-radius: var(--pilule);
+  background: var(--accent-pale); color: var(--accent-fonce);
+}
+.anglais { font-family: var(--mono); font-size: 12.5px; color: var(--encre-2); }
+
+/* ---------- Cartes de maison ---------- */
+.resume { color: var(--encre-2); margin: 4px 0 14px; font-size: 15px; }
+.maisons { display: grid; gap: 12px; }
+.maison {
+  background: var(--surface); border-radius: var(--r-xl); padding: 16px; box-shadow: var(--ombre);
+  display: flex; flex-direction: column; gap: 12px;
+}
+.maison.construite { background: var(--releve); box-shadow: none; }
+.maison-tete { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+.habitants { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px 12px; margin: 0; padding: 0; list-style: none; }
+.habitants li { font-weight: 700; font-size: 16.5px; letter-spacing: -0.01em; }
+.habitants li span { font-weight: 400; color: var(--encre-2); font-size: 14px; }
+.a-poser { margin: 0; font-size: 15px; color: var(--encre); }
+.a-poser b { font-weight: 600; }
+.donner { margin: 0; font-size: 14px; color: var(--encre-2); }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.actions > * { flex: 1 1 150px; }
+.vide {
+  background: var(--releve); border-radius: var(--r-xl); padding: 22px; text-align: center;
+  display: flex; flex-direction: column; gap: 12px; align-items: center;
+}
+
+/* ---------- Détail d'une maison ---------- */
+.fil { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 6px; }
+.rond {
+  width: 44px; height: 44px; flex: none; border-radius: var(--pilule); border: 0;
+  background: var(--releve); display: grid; place-items: center; text-decoration: none; color: var(--encre);
+  font-size: 20px;
+}
+.rond:hover { background: var(--releve-2); }
+.panneau { background: var(--surface); border-radius: var(--r-xl); padding: 16px; box-shadow: var(--ombre); margin-bottom: 12px; }
+.panneau > h2 { margin-bottom: 4px; }
+.panneau > .releve { display: block; margin-bottom: 12px; }
+.tableau-box { overflow-x: auto; margin: 0 -4px; }
+.tableau { border-collapse: collapse; width: 100%; font-size: 14px; }
+.tableau th, .tableau td { padding: 7px 4px; text-align: center; border-bottom: 1px solid var(--filet); }
+.tableau th:first-child, .tableau td:first-child { text-align: left; }
+.tableau thead th { font-size: 13px; font-weight: 700; vertical-align: bottom; }
+.tableau tfoot td { font-weight: 800; border-bottom: 0; }
+.point { display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: var(--aplat); }
+.point.manque { background: none; border: 2px solid var(--encre-2); opacity: .55; }
+.tableau tr.non-couvert td:first-child { color: var(--encre-2); }
+.ok { color: var(--fini); }
+.ko { color: var(--prio); }
+
+.objets-liste { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.objet-ligne { display: flex; gap: 12px; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid var(--filet); }
+.objet-ligne:last-child { border-bottom: 0; }
+.objet-ligne input { width: 24px; height: 24px; margin: 2px 0 0; accent-color: var(--aplat); flex: none; }
+.objet-ligne .nom { font-weight: 700; }
+.objet-ligne .detail { font-size: 14px; color: var(--encre-2); display: block; }
+.objet-ligne details { font-size: 14px; color: var(--encre-2); margin-top: 4px; }
+.objet-ligne summary { cursor: pointer; color: var(--accent); min-height: 32px; display: flex; align-items: center; }
+.objet-ligne ul { margin: 4px 0 0; padding-left: 18px; }
+.teste { font-family: var(--mono); font-size: 12.5px; color: var(--fini); white-space: nowrap; }
+
+/* ---------- Liste des Pokémon ---------- */
+.champ { display: flex; flex-direction: column; gap: 6px; font-size: 14px; font-weight: 600; color: var(--encre-2); margin-bottom: 10px; }
+.champ input, .champ select {
+  min-height: 46px; font-size: 16px; padding: 10px 14px; border: 1px solid var(--filet);
+  border-radius: var(--r-md); background: var(--surface); color: var(--encre); font-weight: 400;
+}
+.champ input:focus, .champ select:focus { outline: none; border-color: var(--accent); }
+.liste-pk { list-style: none; margin: 0; padding: 0; background: var(--surface); border-radius: var(--r-xl); box-shadow: var(--ombre); overflow: hidden; }
+.pk { border-bottom: 1px solid var(--filet); }
+.pk:last-child { border-bottom: 0; }
+.pk label { display: flex; gap: 12px; align-items: flex-start; padding: 12px 14px; cursor: pointer; }
+.pk input { width: 24px; height: 24px; margin: 2px 0 0; accent-color: var(--aplat); flex: none; }
+.pk .corps { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.pk .ligne1 { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+.pk .nom { font-weight: 700; font-size: 16.5px; }
+.pk:not(.coche) .nom { font-weight: 600; color: var(--encre-2); }
+.pk .gouts { display: flex; flex-wrap: wrap; gap: 4px; }
+.pk .saveur { font-size: 14px; color: var(--encre-2); }
+.alerte { color: var(--prio); font-size: 13px; }
+.reglage { display: flex; gap: 10px; align-items: center; font-size: 15px; margin: 6px 0 16px; min-height: 44px; }
+.reglage input { width: 22px; height: 22px; accent-color: var(--aplat); }
+
+/* ---------- Page objets ---------- */
+.carte-objet { background: var(--surface); border-radius: var(--r-lg); padding: 12px 14px; box-shadow: var(--ombre); }
+.carte-objet .tete { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+.carte-objet .gouts { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
+.objets-grille { display: grid; gap: 10px; }
+.sources { font-size: 13px; color: var(--encre-2); margin-top: 30px; }
+
+@media (min-width: 700px) {
+  h1 { font-size: 40px; }
+  .habitants { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .objets-grille { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}
+
+/* « testé en jeu » sur la page Objets : la liste des goûts revient à la ligne */
+.carte-objet { min-width: 0; }
+.carte-objet .teste { display: block; white-space: normal; margin-top: 8px; }
+
+/* ---------- Images des Pokémon et des objets (Serebii, JoeNesTeam) ---------- */
+.vignette { display: block; flex: none; object-fit: contain; }
+.vide-img { border-radius: var(--r-md); background: var(--releve); }
+.habitants li { display: flex; flex-direction: column; align-items: center; gap: 2px; text-align: center; }
+.habitants li .vignette { width: 64px; height: 64px; }
+.a-poser { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.a-poser li {
+  display: flex; align-items: center; gap: 8px; padding: 4px 12px 4px 4px;
+  background: var(--releve); border-radius: var(--pilule); font-size: 14px;
+}
+.a-poser li .vignette { width: 40px; height: 40px; border-radius: 50%; background: var(--surface); }
+.a-poser li.pose { opacity: .55; text-decoration: line-through; }
+.tableau thead th .vignette { margin: 0 auto 2px; }
+.nom-court { display: block; }
+.objet-ligne .vignette { border-radius: var(--r-md); background: var(--releve); }
+.pk label .vignette { margin-top: -4px; }
+.carte-objet .tete { align-items: center; }
+.carte-objet .tete .nom { flex: 1; min-width: 0; }
+.carte-objet .vignette { border-radius: var(--r-md); background: var(--releve); }
+.habitants { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px 4px; }
+.habitants li { font-size: 14px; overflow-wrap: anywhere; line-height: 1.25; }
+
+/* ---------- Mes appareils ---------- */
+.partage { margin-top: 26px; }
+.partage p { margin: 8px 0; }
+.code-partie {
+  font-family: var(--mono); font-size: 15px; background: var(--releve); border-radius: var(--r-md);
+  padding: 10px 14px; overflow-wrap: anywhere; user-select: all;
+}

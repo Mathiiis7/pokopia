@@ -1,0 +1,4 @@
+# Pages téléchargées par les scripts d'outils/ : se retéléchargent, inutiles sur GitHub
+outils/cache/
+__pycache__/
+.claude/

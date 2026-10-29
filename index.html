@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Pokopia</title>
+  <meta name="description" content="Mes Pokémon de Pokopia, les maisons à construire et les objets à y poser.">
+  <meta name="theme-color" content="#1d6b4f">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icones/icone.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icones/icone-180.png">
+  <link rel="preload" href="polices/figtree-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="donnees/pokopia.json" as="fetch" crossorigin>
+  <link rel="stylesheet" href="style.css">
+  <script type="module" src="js/app.js"></script>
+</head>
+<body>
+  <nav class="capsule" aria-label="Pages">
+    <a href="#maisons" data-page="maisons">Maisons</a>
+    <a href="#pokemon" data-page="pokemon">Pokémon</a>
+    <a href="#objets" data-page="objets">Objets</a>
+  </nav>
+  <main id="page" tabindex="-1">
+    <p class="attente">Chargement des Pokémon…</p>
+  </main>
+  <noscript><p class="attente">Cette page a besoin de JavaScript.</p></noscript>
+</body>
+</html>
