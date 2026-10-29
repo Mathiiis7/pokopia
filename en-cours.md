@@ -8,6 +8,9 @@ Mis à jour le 29/10/2026.
 - Images de tous les Pokémon (369) et objets (735), 5 Mo en tout.
 - **Partage entre appareils branché** sur Supabase (projet `xcundtthsdsftbrdxbhf`, clé publique dans `js/config.js`) et testé en ligne. Deux parties d'essai laissées dans la table `parties` (codes `essai-claude-…` et `v9cbXQ…`) : sans effet, supprimables dans Table Editor.
 
+- Ajouté le 29/10 au soir : image de la baie à donner ; bouton « Je ne l'ai pas » sur chaque objet (détail d'une maison et page Objets, liste dans `sansObjets`) : le calcul refait la liste sans ces objets, maisons construites comprises, et chacun reste à 4/5 au moins (vérifié trois refus de suite).
+- Question ouverte : un lit par Pokémon ou un seul ? La seule preuve (vidéo [A] de JoeNesTeam) : un lit pour deux grands Pokémon a suffi. Pas vérifié pour 4.
+
 ## Ce qui reste (rien d'obligatoire)
 - Mathis doit créer son code sur un premier appareil (page Pokémon, « Mes appareils ») puis ouvrir le lien sur l'autre, et ajouter l'icône à l'écran d'accueil.
 - Ajouter Pokopia à `qg/structure/projets.md` (à faire depuis le QG).
