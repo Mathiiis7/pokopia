@@ -3,18 +3,17 @@
 Mis à jour le 29/10/2026.
 
 ## Où on en est
-- **Appli écrite et testée en local** (direction A + C choisie par Mathis) : `index.html`, `style.css`, `js/app.js` (pages), `js/groupes.js` (calcul), `js/calcul.js` (calcul à part de la page), `js/etat.js` (coches dans le navigateur), `sw.js`, `manifest.webmanifest`, `icones/` (maison blanche sur vert forêt, `outils/icones.mjs`). Essai local : configuration « pokopia » dans `.claude/launch.json` (port 8642).
-- Vérifié dans le navigateur, ordinateur et téléphone (375 px), clair et sombre : cocher, recherche, Mes Pokémon / Tout le jeu, filtres, détail d'une maison, objets posés, « Je l'ai construite » (la maison ne bouge plus, objets compris), pas de défilement de côté.
-- Données : `donnees/pokopia.json`, avec les familles d'évolution. Jeu de base : 92 maisons, toutes comblées, 3,2 objets en moyenne, 0,2 s.
-- Dépôt git local, **rien de commité**, pas encore sur GitHub.
+- **En ligne** : https://mathiiis7.github.io/pokopia (dépôt public `Mathiiis7/pokopia`, GitHub Pages, publié à chaque push). Première version finie selon le brief : vérifiée en ligne sur ordinateur et en largeur téléphone.
+- Pages : Maisons (mes Pokémon / tout le jeu, filtres par environnement), détail d'une maison (qui est comblé, objets à poser, comment les avoir, baie à donner, « Je l'ai construite »), Pokémon (à cocher), Objets (par goût).
+- Images de tous les Pokémon (369) et objets (735), 5 Mo en tout.
+- **Partage entre appareils branché** sur Supabase (projet `xcundtthsdsftbrdxbhf`, clé publique dans `js/config.js`) et testé en ligne. Deux parties d'essai laissées dans la table `parties` (codes `essai-claude-…` et `v9cbXQ…`) : sans effet, supprimables dans Table Editor.
 
-## Ce qui reste
-1. Mise en ligne : créer `Mathiiis7/pokopia` (public, GitHub Pages), commit, push, tester l'adresse sur téléphone. Attend le feu vert de Mathis.
-2. Partage téléphone/ordi : Supabase. Idée retenue pour lui épargner les réglages d'e-mail : un « code de partie » secret (pas de connexion par e-mail), deux fonctions SQL lire/écrire. Mathis crée le compte et le projet, colle un script SQL, me donne l'adresse du projet et la clé publique.
-3. Ajouter Pokopia à `qg/structure/projets.md` et une ligne dans `qg/savoir/skills-et-extensions.md` si besoin (rien d'installé).
+## Ce qui reste (rien d'obligatoire)
+- Mathis doit créer son code sur un premier appareil (page Pokémon, « Mes appareils ») puis ouvrir le lien sur l'autre, et ajouter l'icône à l'écran d'accueil.
+- Ajouter Pokopia à `qg/structure/projets.md` (à faire depuis le QG).
+- 193 objets sans nom français, affichés en anglais.
 
 ## Décisions et pourquoi
-- Familles d'évolution ensemble (choix de Mathis, voir `CLAUDE.md`).
-- Les trois objets obligatoires (repos, déco, jouet) sont choisis en premier : souvent ils suffisent.
-- Pas d'images de Pokémon : elles appartiennent à Nintendo, et le site est public. Les noms suffisent pour l'instant.
-- 193 objets sans nom français : affichés en anglais, marqués « nom anglais ».
+- Familles d'évolution ensemble, même environnement, maisons construites bloquées (objets compris) : voir `CLAUDE.md`.
+- Partage par code secret plutôt que par e-mail : pas de réglage d'e-mail, marche dans l'icône d'écran d'accueil de l'iPhone (où un lien reçu par e-mail s'ouvrirait dans Safari, à part).
+- L'appli redemande toujours les fichiers au serveur (`sw.js`, « no-cache ») : sans ça, GitHub Pages servait l'ancienne version pendant 10 minutes.
