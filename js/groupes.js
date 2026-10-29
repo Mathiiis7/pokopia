@@ -18,7 +18,13 @@ const OBJETS_PAR_GOUT = 12;
 
 // Valeur d'un goût couvert par un objet : testé en jeu par JoeNesTeam > vu seulement sur Serebii.
 function valeur(objet, gout) {
-  return (objet.testes.includes(gout) ? 1 : 0.85) - (objet.fr ? 0 : 0.05);
+  return (objet.testes.includes(gout) ? 1 : 0.85) - (objet.fr ? 0 : 0.05) - (facile(objet) ? 0 : 0.25);
+}
+
+// Facile à obtenir : se fabrique, ou s'achète à la boutique (d'après « Comment l'avoir »).
+// Les autres (pièces de fossile, objets à expertiser…) ne passent qu'en dernier recours.
+export function facile(objet) {
+  return Boolean(objet.materiaux?.length) || (objet.obtention || []).some((x) => /boutique/i.test(x));
 }
 
 // Prépare les objets une fois pour toutes : seuls ceux qu'on pose dans une maison comptent.
@@ -35,7 +41,7 @@ export function preparer(objets) {
   // Pour chaque goût, on ne garde que les meilleurs objets (testés, nom français, beaucoup de goûts) :
   // le calcul reste rapide sur téléphone, et un objet qui ne porte qu'un goût ne gagne jamais.
   // Ordre fixe : à égalité, le premier de la liste gagne, et le résultat ne varie pas.
-  const note = (o) => o.testes.length + 0.5 * o.gouts.length + (o.fr ? 0.5 : 0);
+  const note = (o) => o.testes.length + 0.5 * o.gouts.length + (o.fr ? 0.5 : 0) + (facile(o) ? 1 : 0);
   for (const [g, liste] of parGout) {
     liste.sort((a, b) => note(b) - note(a) || (a.fr || a.en || a.id).localeCompare(b.fr || b.en || b.id));
     parGout.set(g, liste.slice(0, OBJETS_PAR_GOUT));

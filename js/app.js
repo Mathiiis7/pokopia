@@ -11,13 +11,17 @@ let resultat = null;          // dernier calcul des maisons
 let enCours = false;
 let filtreEnv = "tous";       // filtre de la page Maisons (non gardé)
 let filtrePk = { texte: "", vue: "tous" };
-let filtreObjet = { texte: "", gout: "", sans: false };
+let filtreObjet = { texte: "", gout: "", sans: false, limite: 60 };
 
 // ---------- Outils ----------
 const h = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const sansAccent = (s) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 const nomPk = (p) => p.fr || p.en;
-const nomObjet = (o) => o.fr ? h(o.fr) : `${h(o.en || o.id)} <span class="anglais">nom anglais</span>`;
+const nomObjet = (o) => o.fr ? h(o.fr) : `${h(o.en || o.id)} <span class="marque-en bulle" tabindex="0" data-nom="Nom anglais : pas de nom français trouvé">EN</span>`;
+const nomTexte = (o) => o.fr || o.en || o.id;
+// bulle : le nom s'affiche au survol (ordinateur) ou au toucher (téléphone)
+const bulle = (nom, contenu, classe = "") =>
+  `<span class="bulle ${classe}" tabindex="0" role="img" aria-label="${h(nom)}" data-nom="${h(nom)}">${contenu}</span>`;
 const pluriel = (n, un, plusieurs) => `${n} ${n > 1 ? plusieurs : un}`;
 // images : copiées dans images/ par outils/telecharger_images.py ; sans image, une case vide
 const imgPk = (p, t) => p.img
@@ -28,7 +32,7 @@ const IMG_GOUT = new Map();
 const icone = (g, extra = "") => {
   const nom = h(G.get(g));
   const img = IMG_GOUT.get(g);
-  return `<span class="ico-gout${extra}" tabindex="0" role="img" aria-label="${nom}" data-nom="${nom}">${img
+  return `<span class="ico-gout bulle${extra}" tabindex="0" role="img" aria-label="${nom}" data-nom="${nom}">${img
     ? `<img src="images/gouts/${img}.webp" width="32" height="32" alt="">` : nom.slice(0, 2)}</span>`;
 };
 const imgSaveur = (s, t) => s?.img
@@ -46,8 +50,8 @@ function pokemonVisibles(e = obtenir()) {
 function pokemonACalculer(e = obtenir()) {
   const visibles = pokemonVisibles(e);
   if (e.mode === "mes") {
-    const coches = new Set(e.coches);
-    return visibles.filter((p) => coches.has(p.id));
+    const pris = new Set([...e.coches, ...e.construites.flatMap((v) => (Array.isArray(v) ? v : v.habitants))]);
+    return visibles.filter((p) => pris.has(p.id));
   }
   return visibles.filter((p) => p.groupe !== "evenement");
 }
@@ -105,15 +109,15 @@ function carteMaison(m) {
         <span class="releve">${m.verrouillee ? "construite" : famille ? "une famille" : ""}${m.manques.length ? ' · <span class="ko">pas tous comblés</span>' : ""}</span>
         <span class="releve">${reste ? pluriel(reste, "objet à poser", "objets à poser") : "tout est posé"}</span>
       </div>
-      <ul class="habitants">${habitants.map((p) => `<li>${imgPk(p, 64)}<span>${h(nomPk(p))}</span></li>`).join("")}</ul>
-      <ul class="a-poser">${objets.map((o) => o.libre
-        ? `<li><span class="vignette vide-img" style="width:40px;height:40px" aria-hidden="true"></span><span>un ${USAGE[o.usage]} au choix</span></li>`
-        : `<li class="${poses.has(o.id) ? "pose" : ""}">${imgObjet(o, 40)}<span>${nomObjet(o)}</span></li>`).join("")}</ul>
-      <div class="donner"><span>À donner une fois :</span>${saveurs.map((s) => `<span class="baie" title="${h(s.conseil)} (${h(s.saveur)})">${imgSaveur(s, 32)}<span>${h(s.conseil)}${saveurs.length > 1 ? ` <span class="pour">→ ${s.noms.map(h).join(", ")}</span>` : ""}</span></span>`).join("")}</div>
-      <div class="actions">
-        <a class="secondaire" href="#maison/${encodeURIComponent(cle)}">Voir le détail</a>
-        ${m.verrouillee ? "" : `<button class="principal" data-construire="${h(cle)}">Je l'ai construite</button>`}
+      <a class="habitants-lien" href="#maison/${encodeURIComponent(cle)}"><ul class="habitants">${habitants.map((p) => `<li>${imgPk(p, 64)}<span>${h(nomPk(p))}</span></li>`).join("")}</ul></a>
+      <div class="mini">
+        <div class="mini-objets" aria-label="À poser">${objets.map((o) => o.libre
+          ? bulle(`un ${USAGE[o.usage]} au choix`, "", "rond-objet libre")
+          : bulle(`${nomTexte(o)} (${USAGE[o.usage]})`, imgObjet(o, 40), `rond-objet${poses.has(o.id) ? " pose" : ""}`)).join("")}</div>
+        <div class="mini-baies" aria-label="À donner une fois">${saveurs.map((s) =>
+          bulle(`${s.conseil} → ${s.noms.join(", ")}`, imgSaveur(s, 34), "rond-baie")).join("")}</div>
       </div>
+      <a class="secondaire voir" href="#maison/${encodeURIComponent(cle)}">Voir le détail</a>
     </article>`;
 }
 
@@ -189,10 +193,9 @@ function pageMaison(cle) {
   const couvert = (k, g) => (m.couverts?.[k] || []).includes(g);
   gouts.sort((a, b) => combien(b) - combien(a) || (couvertParUn(b) - couvertParUn(a)) || G.get(a).localeCompare(G.get(b)));
   function couvertParUn(g) { return habitants.some((p, k) => couvert(k, g)) ? 1 : 0; }
-  const court = (p) => { const n = nomPk(p); return n.length > 8 ? n.slice(0, 7) + "." : n; };
   const tableau = `
     <div class="tableau-box"><table class="tableau">
-      <thead><tr><th scope="col">Goût</th>${habitants.map((p) => `<th scope="col" title="${h(nomPk(p))}">${imgPk(p, 44)}<span class="nom-court">${h(court(p))}</span></th>`).join("")}</tr></thead>
+      <thead><tr><th scope="col">Goût</th>${habitants.map((p) => `<th scope="col">${bulle(nomPk(p), imgPk(p, 48), "tete-pk")}</th>`).join("")}</tr></thead>
       <tbody>${gouts.map((g) => {
         const pris = habitants.some((p, k) => couvert(k, g));
         return `<tr class="${pris ? "" : "non-couvert"}"><td>${icone(g)}</td>${habitants.map((p, k) =>
@@ -204,7 +207,7 @@ function pageMaison(cle) {
       }).join("")}</tr></tfoot>
     </table></div>`;
 
-  const objetsEnv = D.objets.filter((o) => o.environnements.includes(m.environnement)).slice(0, 4);
+  const objetsEnv = D.objets.filter((o) => o.environnements.includes(m.environnement)).slice(0, 8);
   const saveurs = groupesSaveur(habitants);
   return `
     <div class="fil">
@@ -217,7 +220,8 @@ function pageMaison(cle) {
     <section class="panneau">
       <h2>Environnement : ${h(env?.fr)}</h2>
       <span class="releve">2 objets suffisent</span>
-      <p style="margin:0">${env?.conseil ? h(env.conseil) : objetsEnv.map((o) => nomObjet(o)).join(" · ")}</p>
+      ${env?.conseil ? `<p style="margin:0 0 8px">${h(env.conseil)}</p>` : ""}
+      ${objetsEnv.length ? `<div class="mini-objets">${objetsEnv.map((o) => bulle(nomTexte(o), imgObjet(o, 40), "rond-objet")).join("")}</div>` : ""}
     </section>
 
     <section class="panneau">
@@ -263,7 +267,7 @@ function pageMaison(cle) {
 // ---------- Page Pokémon ----------
 function lignePk(p, coches) {
   const coche = coches.has(p.id);
-  return `<li class="pk${coche ? " coche" : ""}" data-id="${h(p.id)}"><label>
+  return `<li class="pk${coche ? " coche" : ""}" data-id="${h(p.id)}" data-cle="${h(sansAccent(nomPk(p) + " " + p.en))}"><label>
     <input type="checkbox" data-coche="${h(p.id)}" ${coche ? "checked" : ""} aria-label="J'ai ${h(nomPk(p))}">
     ${imgPk(p, 56)}
     <span class="corps">
@@ -277,18 +281,13 @@ function lignePk(p, coches) {
 function pagePokemon() {
   const e = obtenir();
   const coches = new Set(e.coches);
-  const t = sansAccent(filtrePk.texte.trim());
   const visibles = pokemonVisibles(e);
-  const liste = visibles.filter((p) =>
-    (!t || sansAccent(nomPk(p)).includes(t) || sansAccent(p.en).includes(t)) &&
-    (filtrePk.vue === "tous" || (filtrePk.vue === "coches") === coches.has(p.id)));
+  const liste = visibles;
   const nbCoches = visibles.filter((p) => coches.has(p.id)).length;
-  const sections = D.environnements.map((env) => {
-    const ps = liste.filter((p) => p.environnement === env.id);
-    if (!ps.length) return "";
-    return `<div class="section-titre"><h2>${h(env.fr)}</h2><span class="compteur">${ps.length}</span></div>
-      <ul class="liste-pk">${ps.map((p) => lignePk(p, coches)).join("")}</ul>`;
-  }).join("");
+  const groupe = (titre, ps) => ps.length ? `<section class="groupe-pk">
+      <div class="section-titre"><h2>${h(titre)}</h2><span class="compteur">${ps.length}</span></div>
+      <ul class="liste-pk">${ps.map((p) => lignePk(p, coches)).join("")}</ul></section>` : "";
+  const sections = D.environnements.map((env) => groupe(env.fr, liste.filter((p) => p.environnement === env.id))).join("");
   const sansEnv = liste.filter((p) => !p.environnement);
   return `
     <h1>Mes Pokémon</h1>
@@ -301,12 +300,34 @@ function pagePokemon() {
       <button class="jeton" data-vue="coches" aria-pressed="${filtrePk.vue === "coches"}">Cochés</button>
       <button class="jeton" data-vue="non" aria-pressed="${filtrePk.vue === "non"}">Pas encore cochés</button>
     </div>
-    <label class="reglage"><input type="checkbox" data-dlc ${e.dlc ? "checked" : ""}> Montrer les Pokémon de la zone DLC (Bubbly Basin)</label>
     ${sections}
-    ${sansEnv.length ? `<div class="section-titre"><h2>Environnement inconnu</h2></div><ul class="liste-pk">${sansEnv.map((p) => lignePk(p, coches)).join("")}</ul>` : ""}
-    ${liste.length ? "" : `<div class="vide"><p>Aucun Pokémon ne correspond.</p></div>`}
+    ${groupe("Environnement inconnu", sansEnv)}
+    <div class="vide" data-aucun-pk hidden><p>Aucun Pokémon ne correspond.</p></div>
+    <label class="reglage"><input type="checkbox" data-dlc ${e.dlc ? "checked" : ""}> Montrer les Pokémon de la zone DLC (Bubbly Basin)</label>
     ${blocPartage()}
     ${sources()}`;
+}
+
+// Applique la recherche et le filtre aux lignes déjà dessinées (bien plus rapide que tout redessiner).
+function filtrerPk() {
+  const t = sansAccent(filtrePk.texte.trim());
+  const coches = new Set(obtenir().coches);
+  let total = 0;
+  for (const sec of page.querySelectorAll(".groupe-pk")) {
+    let n = 0;
+    for (const li of sec.querySelectorAll(".pk")) {
+      const ok = (!t || li.dataset.cle.includes(t)) &&
+        (filtrePk.vue === "tous" || (filtrePk.vue === "coches") === coches.has(li.dataset.id));
+      li.hidden = !ok;
+      if (ok) n++;
+    }
+    sec.hidden = !n;
+    sec.querySelector(".compteur").textContent = n;
+    total += n;
+  }
+  const aucun = page.querySelector("[data-aucun-pk]");
+  if (aucun) aucun.hidden = total > 0;
+  page.querySelectorAll("[data-vue]").forEach((b) => b.setAttribute("aria-pressed", b.dataset.vue === filtrePk.vue));
 }
 
 // ---------- Mes appareils (partage par code) ----------
@@ -344,7 +365,7 @@ function pageObjets() {
     .filter((o) => !filtreObjet.sans || sans.has(o.id))
     .filter((o) => (!g || o.gouts.includes(g)) && (!t || sansAccent(o.fr || "").includes(t) || sansAccent(o.en || "").includes(t)))
     .sort((a, b) => (g ? (b.testes.includes(g) - a.testes.includes(g)) : 0) || b.gouts.length - a.gouts.length || (a.fr || a.en).localeCompare(b.fr || b.en));
-  const montres = liste.slice(0, 60);
+  const montres = liste.slice(0, filtreObjet.limite);
   const goutsTries = [...D.gouts].sort((a, b) => a.fr.localeCompare(b.fr));
   return `
     <h1>Objets</h1>
@@ -369,6 +390,9 @@ function pageObjets() {
         ${o.testes.length ? `<span class="teste">testé en jeu (goûts soulignés)</span>` : ""}
         <button class="lien-action" data-sans="${h(o.id)}">${sans.has(o.id) ? "Je l'ai maintenant" : "Je ne l'ai pas"}</button>
       </article>`).join("")}</div>
+    ${liste.length > montres.length ? `<button class="secondaire plus" data-plus-objets>Voir ${Math.min(60, liste.length - montres.length)} objets de plus</button>` : ""}
+    ${!liste.length && filtreObjet.sans ? `<div class="vide"><p>Tu as tous les objets. Si un objet proposé te manque, touche « Je ne l'ai pas » : il sera remplacé partout.</p></div>` : ""}
+    ${!liste.length && !filtreObjet.sans ? `<div class="vide"><p>Aucun objet ne correspond.</p></div>` : ""}
     ${sources()}`;
 }
 
@@ -394,6 +418,7 @@ function afficher() {
   const actif = document.activeElement;
   const recherche = actif?.matches?.("[data-cherche-pk], [data-cherche-objet]") ? { sel: actif.matches("[data-cherche-pk]") ? "[data-cherche-pk]" : "[data-cherche-objet]", pos: actif.selectionStart } : null;
   page.innerHTML = nom === "pokemon" ? pagePokemon() : nom === "objets" ? pageObjets() : nom === "maison" ? pageMaison(arg) : pageMaisons();
+  if (nom === "pokemon") filtrerPk();
   if (recherche) {
     const champ = page.querySelector(recherche.sel);
     champ.focus();
@@ -433,10 +458,11 @@ page.addEventListener("click", (ev) => {
     calculer();
     return;
   }
-  if (b.dataset.objetsSans) { filtreObjet.sans = b.dataset.objetsSans === "oui"; afficher(); return; }
+  if (b.dataset.objetsSans) { filtreObjet.sans = b.dataset.objetsSans === "oui"; filtreObjet.limite = 60; afficher(); return; }
+  if (b.matches("[data-plus-objets]")) { filtreObjet.limite += 60; afficher(); return; }
   if (b.dataset.mode) { changer((e) => { e.mode = b.dataset.mode; }); resultat = null; filtreEnv = "tous"; calculer(); }
   else if (b.dataset.env) { filtreEnv = b.dataset.env; afficher(); }
-  else if (b.dataset.vue) { filtrePk.vue = b.dataset.vue; afficher(); }
+  else if (b.dataset.vue) { filtrePk.vue = b.dataset.vue; filtrerPk(); }
   else if (b.dataset.construire) {
     // la maison garde ses habitants et ses objets tels qu'affichés
     const m = resultat.find((x) => cleMaison(x.habitants) === b.dataset.construire);
@@ -479,14 +505,21 @@ page.addEventListener("change", (ev) => {
     calculer();
     afficher();
   } else if (c.matches("[data-gout-objet]")) {
-    filtreObjet.gout = c.value; afficher();
+    filtreObjet.gout = c.value; filtreObjet.limite = 60; afficher();
   }
 });
 
+let attenteRecherche = null;
 page.addEventListener("input", (ev) => {
   const c = ev.target;
-  if (c.matches("[data-cherche-pk]")) { filtrePk.texte = c.value; afficher(); }
-  else if (c.matches("[data-cherche-objet]")) { filtreObjet.texte = c.value; afficher(); }
+  clearTimeout(attenteRecherche);
+  if (c.matches("[data-cherche-pk]")) {
+    filtrePk.texte = c.value;
+    attenteRecherche = setTimeout(filtrerPk, 120);
+  } else if (c.matches("[data-cherche-objet]")) {
+    filtreObjet.texte = c.value; filtreObjet.limite = 60;
+    attenteRecherche = setTimeout(afficher, 150);
+  }
 });
 
 // un changement venu d'un autre appareil : on recalcule

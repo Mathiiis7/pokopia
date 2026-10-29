@@ -297,19 +297,45 @@ body { overflow-x: clip; }
   content: ""; position: absolute; left: 8px; right: 8px; bottom: -4px; height: 3px;
   border-radius: var(--pilule); background: var(--fini);
 }
-.ico-gout::after {
+.bulle::after {
   content: attr(data-nom); position: absolute; z-index: 10; bottom: calc(100% + 6px); left: 50%;
   transform: translateX(-50%) translateY(4px); opacity: 0; pointer-events: none;
   white-space: nowrap; font-size: 13px; font-weight: 600; line-height: 1.2;
   padding: 6px 10px; border-radius: var(--r-sm); background: var(--encre); color: var(--papier);
   box-shadow: var(--ombre); transition: opacity .15s var(--doux), transform .15s var(--doux);
 }
-.ico-gout:hover::after, .ico-gout:focus-visible::after, .ico-gout:focus::after { opacity: 1; transform: translateX(-50%); }
+.bulle:hover::after, .bulle:focus-visible::after, .bulle:focus::after { opacity: 1; transform: translateX(-50%); }
 .tableau td .ico-gout { width: 34px; height: 34px; }
 .tableau td:first-child { width: 44px; }
 .objet-ligne .detail { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 4px; }
 /* dans le tableau (qui défile de côté), la bulle s'ouvre à droite de l'icône */
-.tableau td:first-child .ico-gout::after {
+.tableau td:first-child .bulle::after {
   bottom: auto; top: 50%; left: calc(100% + 8px); transform: translateY(-50%) translateX(-4px);
 }
-.tableau td:first-child .ico-gout:hover::after, .tableau td:first-child .ico-gout:focus::after { transform: translateY(-50%); }
+.tableau td:first-child .bulle:hover::after, .tableau td:first-child .bulle:focus::after { transform: translateY(-50%); }
+
+/* ---------- Allègement (revue du 29/10/2026) ---------- */
+.bulle { position: relative; cursor: help; }
+/* les icônes de goûts ont des traits foncés : pastille claire, même en mode sombre */
+@media (prefers-color-scheme: dark) { .ico-gout { background: #e9eeea; } }
+.marque-en {
+  display: inline-block; font-size: 11px; font-weight: 700; line-height: 1; vertical-align: 2px;
+  padding: 3px 5px; border-radius: var(--r-sm); background: var(--releve); color: var(--encre-2);
+}
+.habitants-lien { color: inherit; text-decoration: none; border-radius: var(--r-lg); }
+.habitants-lien:hover .habitants li span { color: var(--accent); }
+.mini { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.mini-objets, .mini-baies { display: flex; flex-wrap: wrap; gap: 6px; }
+.rond-objet, .rond-baie {
+  width: 48px; height: 48px; border-radius: 50%; background: var(--releve);
+  display: inline-grid; place-items: center;
+}
+.rond-objet .vignette { width: 40px; height: 40px; }
+.rond-objet.libre { border: 2px dashed var(--encre-2); background: none; }
+.rond-objet.pose { opacity: .4; }
+.rond-baie { background: var(--accent-pale); }
+.voir { width: 100%; }
+.tete-pk { display: inline-block; }
+.tableau th .bulle::after { bottom: auto; top: calc(100% + 4px); }
+.plus { width: 100%; margin-top: 12px; }
+.maison.construite .rond-objet { background: var(--surface); }
