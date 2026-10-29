@@ -339,3 +339,32 @@ body { overflow-x: clip; }
 .tableau th .bulle::after { bottom: auto; top: calc(100% + 4px); }
 .plus { width: 100%; margin-top: 12px; }
 .maison.construite .rond-objet { background: var(--surface); }
+
+/* ---------- Remplacer un objet (détail d'une maison) ---------- */
+.objet-corps { flex: 1; min-width: 0; }
+.ouvrir-objet {
+  display: flex; align-items: center; gap: 12px; width: 100%; text-align: left;
+  border: 0; background: none; padding: 4px; margin: -4px; border-radius: var(--r-md); color: inherit;
+}
+.ouvrir-objet:hover { background: var(--releve); }
+.ouvrir-objet .vignette { border-radius: var(--r-md); background: var(--releve); }
+.voir-rempl { display: block; font-size: 14px; font-weight: 600; color: var(--accent); margin-top: 2px; }
+.remplacants { margin-top: 10px; padding: 12px; border-radius: var(--r-lg); background: var(--releve); }
+.remplacants > .releve { margin: 0 0 8px; }
+.remplacants ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.choisir {
+  display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; min-height: 56px;
+  border: 0; border-radius: var(--r-md); background: var(--surface); padding: 6px 10px; color: inherit;
+  transition: transform .2s var(--doux), box-shadow .2s var(--doux);
+}
+.choisir:hover { transform: translateY(-1px); box-shadow: var(--ombre); }
+.choisir .vignette { border-radius: var(--r-sm); }
+.choisir-corps { flex: 1; min-width: 0; font-size: 14.5px; }
+.choisir-corps .icones { display: flex; margin-top: 4px; }
+.choisir-corps .ico-gout { width: 30px; height: 30px; }
+.choisir-corps .ico-gout img { width: 26px; height: 26px; }
+.rare { font-family: var(--mono); font-size: 12.5px; color: var(--prio); white-space: nowrap; }
+.remplacants .lien-action { margin-top: 8px; }
+.ligne-paire { display: flex; align-items: center; gap: 8px; }
+.ligne-paire + .ligne-paire { margin-top: 4px; }
+.remplacants > .releve + ul + .releve { margin-top: 10px; }

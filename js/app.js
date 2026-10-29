@@ -1,6 +1,7 @@
 // Pokopia : les pages (maisons, détail d'une maison, Pokémon, objets) et leur lien avec le calcul.
 import { obtenir, changer, abonner, cleMaison } from "./etat.js";
 import * as partage from "./partage.js";
+import { facile } from "./groupes.js";
 
 const USAGE = { repos: "repos", deco: "décoration", jouet: "jouet" };
 const page = document.getElementById("page");
@@ -12,6 +13,8 @@ let enCours = false;
 let filtreEnv = "tous";       // filtre de la page Maisons (non gardé)
 let filtrePk = { texte: "", vue: "tous" };
 let filtreObjet = { texte: "", gout: "", sans: false, limite: 60 };
+let ouvert = null;            // détail d'une maison : objet dont on regarde les remplaçants
+let tousRemplacants = false;  // … et s'il faut tous les montrer
 
 // ---------- Outils ----------
 const h = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -56,6 +59,71 @@ function pokemonACalculer(e = obtenir()) {
   return visibles.filter((p) => p.groupe !== "evenement");
 }
 
+// Objets d'une maison : ceux que Mathis a choisis à la main s'il l'a fait (et qu'il les a
+// toujours), sinon ceux du calcul.
+function objetsDe(m, e = obtenir()) {
+  const choix = e.choix?.[cleMaison(m.habitants)];
+  const sans = new Set(e.sansObjets || []);
+  if (choix && choix.every((id) => (O.has(id) || id.startsWith("libre-")) && !sans.has(id))) return choix;
+  return m.objets;
+}
+const usageDe = (id) => O.get(id)?.usage || id.replace("libre-", "");
+
+// Goûts couverts pour chaque habitant par une liste d'objets.
+function couverture(habitants, ids) {
+  const gouts = new Set(ids.flatMap((id) => O.get(id)?.gouts || []));
+  return habitants.map((p) => p.gouts.filter((g) => gouts.has(g)));
+}
+
+// Tous les objets qui peuvent prendre la place de « ancien » : chacun reste à 4 goûts sur 5
+// au moins, et la maison garde un repos, une décoration et un jouet. Les meilleurs d'abord.
+function remplacants(habitants, ids, ancien) {
+  const sans = new Set(obtenir().sansObjets || []);
+  const reste = ids.filter((id) => id !== ancien);
+  const usageGarde = reste.some((id) => usageDe(id) === usageDe(ancien));
+  const goutsReste = new Set(reste.flatMap((id) => O.get(id)?.gouts || []));
+  const liste = [];
+  for (const o of D.objets) {
+    if (!USAGE[o.usage] || sans.has(o.id) || ids.includes(o.id)) continue;
+    if (!usageGarde && o.usage !== usageDe(ancien)) continue;
+    const g = new Set([...goutsReste, ...o.gouts]);
+    const n = habitants.map((p) => p.gouts.filter((x) => g.has(x)).length);
+    if (n.some((x) => x < 4)) continue;
+    const utiles = o.gouts.filter((x) => habitants.some((p) => p.gouts.includes(x)));
+    liste.push({ o, utiles, total: n.reduce((a, b) => a + b, 0), testes: utiles.filter((x) => o.testes.includes(x)).length, facile: facile(o) });
+  }
+  return liste.sort((a, b) => b.total - a.total || b.testes - a.testes || b.facile - a.facile ||
+    (a.o.fr ? 0 : 1) - (b.o.fr ? 0 : 1) || nomTexte(a.o).localeCompare(nomTexte(b.o)));
+}
+
+// Quand aucun objet seul ne suffit : deux objets qui, ensemble, prennent la place de « ancien ».
+function pairesRemplacantes(habitants, ids, ancien, max = 8) {
+  const sans = new Set(obtenir().sansObjets || []);
+  const reste = ids.filter((id) => id !== ancien);
+  const usageGarde = reste.some((id) => usageDe(id) === usageDe(ancien));
+  const goutsReste = new Set(reste.flatMap((id) => O.get(id)?.gouts || []));
+  const voulus = new Set(habitants.flatMap((p) => p.gouts));
+  // seuls les objets qui apportent un goût voulu et absent comptent ; les plus utiles d'abord
+  const utiles = D.objets
+    .filter((o) => USAGE[o.usage] && !sans.has(o.id) && !ids.includes(o.id))
+    .map((o) => ({ o, apport: o.gouts.filter((g) => voulus.has(g) && !goutsReste.has(g)) }))
+    .filter((x) => x.apport.length)
+    .sort((a, b) => b.apport.length - a.apport.length || facile(b.o) - facile(a.o))
+    .slice(0, 120);
+  const paires = [];
+  for (let i = 0; i < utiles.length; i++) {
+    for (let j = i + 1; j < utiles.length; j++) {
+      const a = utiles[i].o, b = utiles[j].o;
+      if (!usageGarde && a.usage !== usageDe(ancien) && b.usage !== usageDe(ancien)) continue;
+      const g = new Set([...goutsReste, ...a.gouts, ...b.gouts]);
+      const n = habitants.map((p) => p.gouts.filter((x) => g.has(x)).length);
+      if (n.some((x) => x < 4)) continue;
+      paires.push({ a, b, total: n.reduce((s, x) => s + x, 0), facile: facile(a) + facile(b) });
+    }
+  }
+  return paires.sort((x, y) => y.total - x.total || y.facile - x.facile).slice(0, max);
+}
+
 // ---------- Calcul, à part de la page ----------
 let travailleur = null, demande = 0, objetsEnvoyes = false;
 function calculer() {
@@ -98,15 +166,17 @@ function carteMaison(m) {
   const habitants = m.habitants.map((id) => P.get(id));
   const cle = cleMaison(m.habitants);
   const poses = new Set(e.poses[cle] || []);
-  const objets = m.objets.map((id) => O.get(id) || { id, libre: true, usage: id.replace("libre-", "") });
+  const ids = objetsDe(m, e);
+  const objets = ids.map((id) => O.get(id) || { id, libre: true, usage: id.replace("libre-", "") });
   const reste = objets.filter((o) => !poses.has(o.id)).length;
+  const pasComble = couverture(habitants, ids).some((c) => c.length < 4);
   const saveurs = groupesSaveur(habitants);
   const famille = habitants.length > 1 && habitants.every((p) => p.famille === habitants[0].famille);
   return `
     <article class="maison${m.verrouillee ? " construite" : ""}">
       <div class="maison-tete">
         <span class="env">${h(ENV.get(m.environnement)?.fr)}</span>
-        <span class="releve">${m.verrouillee ? "construite" : famille ? "une famille" : ""}${m.manques.length ? ' · <span class="ko">pas tous comblés</span>' : ""}</span>
+        <span class="releve">${m.verrouillee ? "construite" : famille ? "une famille" : ""}${pasComble ? ' · <span class="ko">pas tous comblés</span>' : ""}</span>
         <span class="releve">${reste ? pluriel(reste, "objet à poser", "objets à poser") : "tout est posé"}</span>
       </div>
       <a class="habitants-lien" href="#maison/${encodeURIComponent(cle)}"><ul class="habitants">${habitants.map((p) => `<li>${imgPk(p, 64)}<span>${h(nomPk(p))}</span></li>`).join("")}</ul></a>
@@ -152,7 +222,7 @@ function pageMaisons() {
   const parEnv = new Map();
   for (const m of resultat) parEnv.set(m.environnement, (parEnv.get(m.environnement) || 0) + 1);
   const liste = maisonsFiltrees();
-  const aPoser = liste.reduce((s, m) => s + m.objets.filter((id) => !(e.poses[cleMaison(m.habitants)] || []).includes(id)).length, 0);
+  const aPoser = liste.reduce((s, m) => s + objetsDe(m, e).filter((id) => !(e.poses[cleMaison(m.habitants)] || []).includes(id)).length, 0);
   const logés = liste.reduce((s, m) => s + m.habitants.length, 0);
   return `
     <h1>Mes maisons</h1>
@@ -180,7 +250,9 @@ function pageMaison(cle) {
   const e = obtenir();
   const habitants = m.habitants.map((id) => P.get(id));
   const poses = new Set(e.poses[cle] || []);
-  const objets = m.objets.map((id) => O.get(id) || { id, libre: true, usage: id.replace("libre-", ""), gouts: [], testes: [] });
+  const ids = objetsDe(m, e);
+  const objets = ids.map((id) => O.get(id) || { id, libre: true, usage: id.replace("libre-", ""), gouts: [], testes: [] });
+  const couverts = couverture(habitants, ids);
   const env = ENV.get(m.environnement);
   const precedente = i > 0 ? liste[i - 1] : null, suivante = i >= 0 && i < liste.length - 1 ? liste[i + 1] : null;
   const lien = (x, sens, texte) => x
@@ -190,7 +262,7 @@ function pageMaison(cle) {
   // tableau : un goût par ligne, les plus partagés en haut
   const gouts = [...new Set(habitants.flatMap((p) => p.gouts))];
   const combien = (g) => habitants.filter((p) => p.gouts.includes(g)).length;
-  const couvert = (k, g) => (m.couverts?.[k] || []).includes(g);
+  const couvert = (k, g) => couverts[k].includes(g);
   gouts.sort((a, b) => combien(b) - combien(a) || (couvertParUn(b) - couvertParUn(a)) || G.get(a).localeCompare(G.get(b)));
   function couvertParUn(g) { return habitants.some((p, k) => couvert(k, g)) ? 1 : 0; }
   const tableau = `
@@ -233,17 +305,25 @@ function pageMaison(cle) {
     <section class="panneau">
       <h2>À poser</h2>
       <span class="releve">${pluriel(objets.length, "objet", "objets")} · coche quand c'est posé</span>
+      <span class="releve">touche un objet pour voir ce qui peut le remplacer</span>
       <ul class="objets-liste">${objets.map((o) => {
-        if (o.libre) return `<li class="objet-ligne"><span>Un objet de ${USAGE[o.usage]} au choix (il en faut un)</span></li>`;
+        const liste = ouvert === o.id ? listeRemplacants(habitants, ids, o) : "";
+        if (o.libre) return `<li class="objet-ligne"><div><button class="ouvrir-objet" data-remplacer="${h(o.id)}" aria-expanded="${ouvert === o.id}">
+          <span class="vignette vide-img" style="width:56px;height:56px" aria-hidden="true"></span>
+          <span>Un objet de ${USAGE[o.usage]} au choix (il en faut un)</span></button>${liste}</div></li>`;
         const utiles = o.gouts.filter((g) => habitants.some((p) => p.gouts.includes(g)));
         const pour = habitants.filter((p) => utiles.some((g) => p.gouts.includes(g))).map(nomPk);
         const teste = utiles.some((g) => o.testes.includes(g));
         return `<li class="objet-ligne">
-          <input type="checkbox" id="pose-${h(o.id)}" data-pose="${h(o.id)}" ${poses.has(o.id) ? "checked" : ""}>
-          ${imgObjet(o, 56)}
-          <div><label for="pose-${h(o.id)}"><span class="nom">${nomObjet(o)}</span> · ${USAGE[o.usage]} ${teste ? '<span class="teste">testé en jeu</span>' : ""}</label>
+          <input type="checkbox" id="pose-${h(o.id)}" data-pose="${h(o.id)}" ${poses.has(o.id) ? "checked" : ""} aria-label="Posé : ${h(nomTexte(o))}">
+          <div class="objet-corps">
+            <button class="ouvrir-objet" data-remplacer="${h(o.id)}" aria-expanded="${ouvert === o.id}">
+              ${imgObjet(o, 56)}
+              <span><span class="nom">${nomObjet(o)}</span> · ${USAGE[o.usage]} ${teste ? '<span class="teste">testé en jeu</span>' : ""}
+              <span class="voir-rempl">${ouvert === o.id ? "Fermer" : "Remplacer…"}</span></span>
+            </button>
             <span class="detail"><span class="icones">${utiles.map((g) => icone(g)).join("")}</span> → ${pour.map(h).join(", ")}</span>
-            <button class="lien-action" data-sans="${h(o.id)}">Je ne l'ai pas : proposer autre chose</button>
+            ${liste}
             ${o.obtention?.length || o.materiaux?.length ? `<details><summary>Comment l'avoir</summary><ul>
               ${o.materiaux?.length ? `<li>Fabriquer : ${o.materiaux.map(h).join(", ")}</li>` : ""}
               ${(o.obtention || []).map((x) => `<li>${h(x)}</li>`).join("")}</ul></details>` : ""}
@@ -262,6 +342,37 @@ function pageMaison(cle) {
         ? `<button class="secondaire" data-debloquer="${h(cle)}">Débloquer cette maison</button>`
         : `<button class="principal" data-construire="${h(cle)}">Je l'ai construite : ne plus la changer</button>`}
     </div>`;
+}
+
+// Liste des remplaçants d'un objet, ouverte sous lui dans le détail.
+function listeRemplacants(habitants, ids, o) {
+  const tous = remplacants(habitants, ids, o.id);
+  const montres = tousRemplacants ? tous : tous.slice(0, 12);
+  return `<div class="remplacants">
+    <p class="releve">${tous.length ? `${pluriel(tous.length, "objet peut", "objets peuvent")} le remplacer, chacun garde tout le monde comblé :` : "Aucun objet seul ne garde tout le monde comblé."}</p>
+    ${tous.length ? "" : listePaires(habitants, ids, o)}
+    <ul>${montres.map(({ o: r, utiles, testes, facile: f }) => `<li>
+      <button class="choisir" data-choisir="${h(o.id)}>${h(r.id)}">
+        ${imgObjet(r, 44)}
+        <span class="choisir-corps"><span class="nom">${nomObjet(r)}</span> · ${USAGE[r.usage]}
+          ${testes ? '<span class="teste">testé en jeu</span>' : ""}${f ? "" : ' <span class="rare">plus dur à trouver</span>'}
+          <span class="icones">${utiles.map((g) => icone(g)).join("")}</span></span>
+      </button></li>`).join("")}</ul>
+    ${tous.length > montres.length ? `<button class="secondaire plus" data-tous-rempl>Voir les ${tous.length}</button>` : ""}
+    ${o.libre ? "" : `<button class="lien-action" data-sans="${h(o.id)}">Je n'ai pas cet objet : ne plus me le proposer nulle part</button>`}
+  </div>`;
+}
+
+function listePaires(habitants, ids, o) {
+  const paires = pairesRemplacantes(habitants, ids, o.id);
+  if (!paires.length) return `<p class="releve">Ni seul ni à deux : garde cet objet si tu peux.</p>`;
+  const ligne = (r) => `${imgObjet(r, 40)}<span class="nom">${nomObjet(r)}</span>`;
+  return `<p class="releve">À deux, ces objets le remplacent :</p>
+    <ul>${paires.map(({ a, b, facile: f }) => `<li>
+      <button class="choisir paire" data-choisir="${h(o.id)}>${h(a.id)}+${h(b.id)}">
+        <span class="choisir-corps"><span class="ligne-paire">${ligne(a)}</span><span class="ligne-paire">+ ${ligne(b)}</span>
+        ${f < 2 ? '<span class="rare">un des deux plus dur à trouver</span>' : ""}</span>
+      </button></li>`).join("")}</ul>`;
 }
 
 // ---------- Page Pokémon ----------
@@ -428,6 +539,7 @@ function afficher() {
 
 let routePrecedente = "";
 window.addEventListener("hashchange", () => {
+  ouvert = null;
   afficher();
   const r = location.hash;
   if (r !== routePrecedente) { window.scrollTo(0, 0); routePrecedente = r; }
@@ -450,12 +562,36 @@ page.addEventListener("click", (ev) => {
   }
   if (b.dataset.sans) {
     const id = b.dataset.sans;
+    ouvert = null;
     changer((e) => {
       const l = new Set(e.sansObjets || []);
       if (l.has(id)) l.delete(id); else l.add(id);
       e.sansObjets = [...l];
     });
     calculer();
+    return;
+  }
+  if (b.dataset.remplacer) {
+    ouvert = ouvert === b.dataset.remplacer ? null : b.dataset.remplacer;
+    tousRemplacants = false;
+    afficher();
+    return;
+  }
+  if (b.matches("[data-tous-rempl]")) { tousRemplacants = true; afficher(); return; }
+  if (b.dataset.choisir) {
+    const [ancien, nouveau] = b.dataset.choisir.split(">");
+    const cle = routeActuelle().arg;
+    const m = resultat?.find((x) => cleMaison(x.habitants) === cle);
+    if (!m) return;
+    // « nouveau » peut être une paire : « a+b » remplace un objet par deux
+    const ids = objetsDe(m).flatMap((id) => (id === ancien ? nouveau.split("+") : [id]));
+    changer((e) => {
+      e.choix = { ...(e.choix || {}), [cle]: ids };
+      // maison construite : elle garde désormais ce choix
+      e.construites = e.construites.map((v) => (!Array.isArray(v) && cleMaison(v.habitants) === cle ? { ...v, objets: ids } : v));
+    });
+    ouvert = null;
+    afficher();
     return;
   }
   if (b.dataset.objetsSans) { filtreObjet.sans = b.dataset.objetsSans === "oui"; filtreObjet.limite = 60; afficher(); return; }
@@ -471,7 +607,7 @@ page.addEventListener("click", (ev) => {
     changer((e) => {
       e.construites = e.construites
         .filter((v) => !membres(v).some((id) => m.habitants.includes(id)))
-        .concat([{ habitants: m.habitants, objets: m.objets }]);
+        .concat([{ habitants: m.habitants, objets: objetsDe(m) }]);
     });
     calculer();
   } else if (b.dataset.debloquer) {
