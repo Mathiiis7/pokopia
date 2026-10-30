@@ -23,6 +23,7 @@ Guide perso de Mathis pour le jeu Pokémon Pokopia (Switch 2, mars 2026) : il co
 
 ## Partage entre appareils
 - Supabase, sans connexion par e-mail : un « code de partie » secret de 24 caractères, deux fonctions SQL (`docs/supabase.sql`). Adresse et clé publique dans `js/config.js` ; vides, le partage est caché.
+- Ne jamais renvoyer la partie sans l'avoir relue : la version « la plus récente gagne » effaçait les coches de l'autre appareil (30/10/2026). On réunit les changements à partir de la dernière version commune (`js/fusion.js`), sans se fier à l'heure des appareils. Tests : `node outils/test-fusion.mjs`.
 - Essai sans compte : `node outils/faux-supabase.mjs` et l'adresse `http://localhost:8643` dans `js/config.js`, **à remettre vide avant de commiter**.
 
 ## Rangement

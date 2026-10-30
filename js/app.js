@@ -453,7 +453,7 @@ function blocPartage() {
       puis ouvre le lien qu'il donne sur l'autre (ou recopie le code ci-dessous).</p>
       <div class="actions"><button class="principal" data-creer-code>Créer mon code</button></div>
       <label class="champ" style="margin-top:12px">J'ai déjà un code
-        <input type="text" data-saisie-code autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="24 caractères">
+        <input type="text" data-saisie-code autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Le code ou le lien">
       </label>
       <button class="secondaire" data-valider-code>Brancher cet appareil</button>`}
   </section>`;

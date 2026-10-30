@@ -11,6 +11,8 @@ Mis à jour le 29/10/2026.
 - Ajouté le 29/10 au soir : image de la baie à donner ; icônes des goûts ; cartes compactes (revue `docs/revue-usage.md`, points 1 à 11 faits) ; **toucher un objet dans le détail montre tout ce qui peut le remplacer** (seul, ou à deux si aucun ne suffit), le choix est gardé par maison (`choix` dans l'état). « Je ne l'ai pas » a été retiré à la demande de Mathis : il voulait surtout choisir un objet plus simple, et l'ancien marquage est effacé au chargement.
 - Question ouverte : un lit par Pokémon ou un seul ? La seule preuve (vidéo [A] de JoeNesTeam) : un lit pour deux grands Pokémon a suffi. Pas vérifié pour 4.
 
+- 30/10 : partage réparé (`js/fusion.js`) : les changements des deux appareils sont réunis au lieu de s'écraser, envoi en 0,5 s et à la fermeture de la page, lecture toutes les 10 s et au retour sur la fenêtre, le champ accepte le lien entier. Testé à deux navigateurs sur le faux serveur ; pas encore sur le vrai service.
+
 ## Ce qui reste (rien d'obligatoire)
 - Mathis doit créer son code sur un premier appareil (page Pokémon, « Mes appareils ») puis ouvrir le lien sur l'autre, et ajouter l'icône à l'écran d'accueil.
 - Ajouter Pokopia à `qg/structure/projets.md` (à faire depuis le QG).
