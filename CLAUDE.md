@@ -15,7 +15,7 @@ Guide perso de Mathis pour le jeu Pokémon Pokopia (Switch 2, mars 2026) : il co
 
 ## Décisions de Mathis (29/10/2026)
 - Maisons de 4 Pokémon du **même environnement** (cohabiter ailleurs est possible mais pas idéal).
-- **Les familles d'évolution vivent ensemble** : une famille de 3 ou 4 a sa maison à elle (une maison de 3, « c'est pas grave ») ; une famille de 2 est complétée par les plus compatibles ; une famille dont l'environnement diffère est séparée par environnement. Liens d'évolution : Pokopia Guide.
+- **Les familles d'évolution vivent ensemble** : une famille de 3 ou 4 a sa maison à elle (une maison de 3, « c'est pas grave ») ; une famille de 2 ne cohabite qu'avec une autre famille de 2, et reste à deux s'il n'y en a pas (31/10/2026) ; une famille de 4 au plus dont l'environnement diffère vit quand même ensemble (31/10/2026, Toudoudou avec Rondoudou et Grodoudou), une plus grande (Évoli) est séparée par environnement. Liens d'évolution : Pokopia Guide.
 - Une maison « construite » garde ses habitants et ses objets ; le calcul ne la touche plus.
 - Groupes calculés au choix sur ses Pokémon cochés ou sur tout le jeu ; il n'a pas la zone DLC (Bubbly Basin).
 - Coches partagées automatiquement entre téléphone et ordi, avec un compte ; icône sur l'écran d'accueil.

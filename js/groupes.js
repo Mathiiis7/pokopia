@@ -2,7 +2,7 @@
 // Pur calcul, sans page : utilisable dans le navigateur et avec node pour les essais.
 //
 // Règles (docs/regles-joenesteam.md) :
-// - une maison = 4 Pokémon au plus, tous du même environnement ;
+// - une maison = 4 Pokémon au plus, tous du même environnement (sauf une famille réunie) ;
 // - chaque Pokémon est comblé quand 4 de ses 5 goûts sont couverts par des objets de la maison ;
 // - il faut au moins un objet de repos, un de décoration et un jouet ;
 // - un objet compte pour tous les goûts qu'il porte et pour tous les habitants.
@@ -153,9 +153,38 @@ function goutsDifferents(maison, masques) {
 
 // ---------- Familles d'évolution ----------
 // Choix de Mathis (29/10/2026) : une famille vit ensemble. Dans un même environnement,
-// une famille de 3 ou 4 a sa maison à elle ; une famille de 2 ou un Pokémon seul
-// complètent les maisons avec les plus compatibles. Une famille dont l'environnement
-// diffère est séparée par environnement (fait en amont : on travaille environnement par environnement).
+// une famille de 3 ou 4 a sa maison à elle ; une famille de 2 ne cohabite qu'avec une autre
+// famille de 2, et reste à deux s'il n'y en a plus (31/10/2026) ; les Pokémon seuls se
+// regroupent entre eux. Une famille de 4 au plus dont l'environnement diffère vit quand même
+// ensemble (31/10/2026) ; une plus grande (Évoli, 9) est séparée par environnement.
+
+// Environnement d'une maison : celui du plus grand nombre, à égalité celui de la dernière évolution.
+function environnementCommun(membres) {
+  const compte = new Map();
+  for (const p of membres) compte.set(p.environnement, (compte.get(p.environnement) || 0) + 1);
+  const max = Math.max(...compte.values());
+  const derniers = [...membres].sort((a, b) => b.num - a.num);
+  return derniers.find((p) => compte.get(p.environnement) === max).environnement;
+}
+
+// Environnement où loger chaque Pokémon. tailleFamille : la famille entière dans le jeu, même
+// si tous ses membres ne sont pas cochés (sans elle, on compte ceux qu'on a reçus).
+function environnementsDeLogement(pokemon) {
+  const parFamille = new Map();
+  for (const p of pokemon) {
+    const f = p.famille || p.id;
+    if (!parFamille.has(f)) parFamille.set(f, []);
+    parFamille.get(f).push(p);
+  }
+  const logement = new Map();
+  for (const membres of parFamille.values()) {
+    const reunie = (membres[0].tailleFamille ?? membres.length) <= TAILLE_MAISON;
+    const commun = environnementCommun(membres);
+    for (const p of membres) logement.set(p.id, reunie ? commun : p.environnement);
+  }
+  return logement;
+}
+
 function unites(pokemon) {
   const parFamille = new Map();
   for (const p of pokemon) {
@@ -214,31 +243,34 @@ function ameliorer(maisons, cout, tours, limite = () => false) {
   }
 }
 
+// Remplit les maisons avec des unités de même taille : chacune prend celle qui lui coûte le moins.
+function remplir(unitesMemeTaille, cout) {
+  const restantes = [...unitesMemeTaille];
+  const maisons = [];
+  while (restantes.length) {
+    const maison = [restantes.shift()];
+    while (restantes.length && taille(maison) + restantes[0].length <= TAILLE_MAISON) {
+      let iMeilleur = 0, meilleur = Infinity;
+      restantes.forEach((u, i) => {
+        const c = cout(plat([...maison, u]));
+        if (c < meilleur) { meilleur = c; iMeilleur = i; }
+      });
+      maison.push(restantes.splice(iMeilleur, 1)[0]);
+    }
+    maisons.push(maison);
+  }
+  ameliorer(maisons, cout, 10);
+  return maisons;
+}
+
 function partagerEnvironnement(pokemon, masques) {
   const cout = (m) => goutsDifferents(m, masques);
   const toutes = unites(pokemon);
   const fixes = toutes.filter((u) => u.length >= 3).map((u) => [u]);
-  // départ : les familles de 2 d'abord, puis chaque maison prend l'unité qui lui coûte le moins
-  const restantes = toutes.filter((u) => u.length < 3).sort((a, b) => b.length - a.length);
-  const souples = [];
-  while (restantes.length) {
-    const maison = [restantes.shift()];
-    while (taille(maison) < TAILLE_MAISON) {
-      let iMeilleur = -1, meilleur = Infinity;
-      const base = cout(plat(maison));
-      restantes.forEach((u, i) => {
-        if (taille(maison) + u.length > TAILLE_MAISON) return;
-        // coût par Pokémon ajouté, pour ne pas défavoriser les familles de 2
-        const c = (cout(plat([...maison, u])) - base) / u.length;
-        if (c < meilleur) { meilleur = c; iMeilleur = i; }
-      });
-      if (iMeilleur < 0) break;
-      maison.push(restantes.splice(iMeilleur, 1)[0]);
-    }
-    souples.push(maison);
-  }
-  ameliorer(souples, cout, 10);
-  return { fixes, souples };
+  // deux listes à part : une famille de 2 ne se mêle jamais à des Pokémon seuls
+  const paires = remplir(toutes.filter((u) => u.length === 2), cout);
+  const seuls = remplir(toutes.filter((u) => u.length === 1), cout);
+  return { fixes, paires, seuls };
 }
 
 // Coût réel d'une maison : pas comblé >> nombre d'objets >> goûts couverts (qui le baissent un peu).
@@ -265,11 +297,13 @@ export function formerMaisons(pokemon, objets, verrouillees = [], essaisFinition
   // maison construite : { habitants: [ids], objets: [ids] } (ou l'ancienne forme, une simple liste d'ids)
   verrouillees = verrouillees.map((v) => (Array.isArray(v) ? { habitants: v, objets: null } : v));
   const pris = new Set(verrouillees.flatMap((v) => v.habitants));
+  const aLoger = pokemon.filter((p) => !pris.has(p.id) && p.environnement && p.gouts.length >= 5);
+  const logement = environnementsDeLogement(aLoger);
   const parEnv = new Map();
-  for (const p of pokemon) {
-    if (pris.has(p.id) || !p.environnement || p.gouts.length < 5) continue;
-    if (!parEnv.has(p.environnement)) parEnv.set(p.environnement, []);
-    parEnv.get(p.environnement).push(p);
+  for (const p of aLoger) {
+    const env = logement.get(p.id);
+    if (!parEnv.has(env)) parEnv.set(env, []);
+    parEnv.get(env).push(p);
   }
   const parIdObjet = new Map(objets.map((o) => [o.id, o]));
   const maisons = [];
@@ -281,19 +315,20 @@ export function formerMaisons(pokemon, objets, verrouillees = [], essaisFinition
     const manquant = v.objets?.some((id) => !id.startsWith("libre-") && !parIdObjet.has(id));
     const fixes = manquant ? null : v.objets?.map((id) => parIdObjet.get(id) || { id, usage: id.replace("libre-", ""), gouts: [], testes: [], libre: true });
     // une maison construite garde ses objets : on ne fait que recompter ce qu'ils couvrent
+    const environnement = environnementCommun(habitants);
     finales.push(fixes
-      ? { habitants, verrouillee: true, environnement: habitants[0].environnement, ...evaluer(habitants, fixes) }
-      : { habitants, verrouillee: true });
+      ? { habitants, verrouillee: true, environnement, ...evaluer(habitants, fixes) }
+      : { habitants, verrouillee: true, environnement });
   }
-  for (const [, groupe] of [...parEnv].sort(([a], [b]) => a.localeCompare(b))) {
-    const { fixes, souples } = partagerEnvironnement(groupe, masques);
+  for (const [environnement, groupe] of [...parEnv].sort(([a], [b]) => a.localeCompare(b))) {
+    const { fixes, paires, seuls } = partagerEnvironnement(groupe, masques);
     const memo = new Map();
-    ameliorer(souples, (m) => coutReel(m, prep, memo), 1, () => memo.size > essaisFinition);
-    for (const m of [...fixes, ...souples]) maisons.push({ habitants: plat(m), verrouillee: false, famille: m.length === 1 && m[0].length > 1 });
+    for (const souples of [paires, seuls]) ameliorer(souples, (m) => coutReel(m, prep, memo), 1, () => memo.size > essaisFinition);
+    for (const m of [...fixes, ...paires, ...seuls]) maisons.push({ habitants: plat(m), verrouillee: false, environnement, famille: m.length === 1 && m[0].length > 1 });
   }
   const parNum = (a, b) => a.num - b.num || a.id.localeCompare(b.id);
   return [...finales, ...maisons]
-    .map((m) => (m.objets ? m : { ...m, environnement: m.habitants[0].environnement, ...objetsPourMaison(m.habitants, prep) }))
+    .map((m) => (m.objets ? m : { ...m, ...objetsPourMaison(m.habitants, prep) }))
     .map((m) => {
       // habitants dans l'ordre du Pokédex ; « couverts » suit le même ordre
       const ordre = m.habitants.map((p, i) => [p, m.couverts[i]]).sort(([a], [b]) => parNum(a, b));

@@ -288,6 +288,8 @@ function pageMaison(cle) {
       <h2>Environnement : ${h(env?.fr)}</h2>
       <span class="releve">2 objets suffisent</span>
       ${env?.conseil ? `<p style="margin:0 0 8px">${h(env.conseil)}</p>` : ""}
+      ${habitants.filter((p) => p.environnement !== m.environnement).map((p) =>
+        `<p style="margin:0 0 8px">${h(nomPk(p))} préfère l'environnement ${h(ENV.get(p.environnement)?.fr)} : il vit ici pour rester en famille.</p>`).join("")}
       ${objetsEnv.length ? `<div class="mini-objets">${objetsEnv.map((o) => bulle(nomTexte(o), imgObjet(o, 40), "rond-objet")).join("")}</div>` : ""}
     </section>
 
@@ -644,7 +646,9 @@ async function demarrer() {
     page.innerHTML = `<p class="attente">Impossible de charger les données. Vérifie la connexion puis recharge la page.</p>`;
     return;
   }
-  for (const p of D.pokemon) P.set(p.id, p);
+  const tailles = new Map();
+  for (const p of D.pokemon) tailles.set(p.famille, (tailles.get(p.famille) || 0) + 1);
+  for (const p of D.pokemon) { p.tailleFamille = tailles.get(p.famille); P.set(p.id, p); }
   for (const o of D.objets) O.set(o.id, o);
   for (const g of D.gouts) { G.set(g.id, g.fr || g.en); IMG_GOUT.set(g.id, g.img); }
   for (const e of D.environnements) ENV.set(e.id, e);
