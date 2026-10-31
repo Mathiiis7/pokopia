@@ -1,6 +1,6 @@
 # En cours - Pokopia
 
-Mis à jour le 29/10/2026.
+Mis à jour le 31/10/2026.
 
 ## Où on en est
 - **En ligne** : https://mathiiis7.github.io/pokopia (dépôt public `Mathiiis7/pokopia`, GitHub Pages, publié à chaque push). Première version finie selon le brief : vérifiée en ligne sur ordinateur et en largeur téléphone.
@@ -12,6 +12,10 @@ Mis à jour le 29/10/2026.
 - Question ouverte : un lit par Pokémon ou un seul ? La seule preuve (vidéo [A] de JoeNesTeam) : un lit pour deux grands Pokémon a suffi. Pas vérifié pour 4.
 
 - 30/10 : partage réparé (`js/fusion.js`) : les changements des deux appareils sont réunis au lieu de s'écraser, envoi en 0,5 s et à la fermeture de la page, lecture toutes les 10 s et au retour sur la fenêtre, le champ accepte le lien entier. Testé à deux navigateurs sur le faux serveur, puis en ligne sur le vrai service. Une partie d'essai de plus dans la table `parties` (code `vchB2i…`), supprimable. Pas essayé sur un vrai téléphone.
+
+- 31/10 : en ligne (commit `1509e94`). Une famille de 2 ne cohabite qu'avec une autre famille de 2, sinon elle reste à deux. Les familles de 4 au plus dont l'environnement diffère vivent ensemble (Toudoudou, Rondoudou, Grodoudou) ; le détail signale qui n'est pas dans son environnement idéal ; Évoli reste réparti. Mention vue en local seulement, pas essayé sur un vrai téléphone.
+- 31/10, en ligne : deux familles ne se mélangent plus, les Pokémon sans évolution se regroupent entre eux ou rejoignent une famille (règle dans `CLAUDE.md`). Sur le jeu de base : 116 maisons au lieu de 93, 12 familles avec invité. PokeAPI complète les évolutions absentes de Pokopia Guide (accord de Mathis : Sancoki avec Tritosor, Salarsen Grave avec Toxizap, familles DLC et événement) ; 50 Pokémon restent sans évolution.
+- Essais dans l'appli : le navigateur intégré a un code de partage sur `localhost` et `127.0.0.1`, changer l'état y écrit dans le vrai Supabase. Utiliser `http://essai.localhost:8642`, sans code.
 
 ## Ce qui reste (rien d'obligatoire)
 - Mathis doit créer son code sur un premier appareil (page Pokémon, « Mes appareils ») puis ouvrir le lien sur l'autre, et ajouter l'icône à l'écran d'accueil.

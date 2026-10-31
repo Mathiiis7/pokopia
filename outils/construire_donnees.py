@@ -12,8 +12,12 @@ Sorties : donnees/pokopia.json (lu par l'appli) et docs/verification-donnees.md
 """
 import json
 import re
+import sys
 from datetime import date
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parent))  # python -I n'y cherche pas de lui-même
+from lire_pokeapi import espece
 
 ICI = Path(__file__).parent
 RACINE = ICI.parent
@@ -22,6 +26,7 @@ SER = json.loads((CACHE / "serebii.json").read_text(encoding="utf-8"))
 PG = json.loads((CACHE / "pokopiaguide.json").read_text(encoding="utf-8"))
 JNT = json.loads((CACHE / "joenesteam.json").read_text(encoding="utf-8"))
 CORR = json.loads((CACHE / "correspondance_gouts.json").read_text(encoding="utf-8"))
+POKEAPI = json.loads((CACHE / "pokeapi.json").read_text(encoding="utf-8"))
 SORTIE = RACINE / "donnees" / "pokopia.json"
 RAPPORT = RACINE / "docs" / "verification-donnees.md"
 # adresses des images, pour outils/telecharger_images.py (les images vont dans images/)
@@ -207,6 +212,23 @@ def main():
                     parent[max(a, b)] = min(a, b)
             else:
                 rapport.append(f"{p_nom(pokemon, pid)} : évolution « {autre} » inconnue de Serebii")
+
+    # Pokopia Guide ne donne pas toutes les évolutions : PokeAPI complète, sans jamais retirer de lien
+    # (lire_pokeapi.py). Les formes d'une espèce n'ont de famille commune que si elle évolue.
+    par_espece = {}
+    for p in pokemon:
+        par_espece.setdefault(espece(p["id"]), []).append(p["id"])
+    for nom in sorted(par_espece):
+        ancetre = POKEAPI.get(nom)
+        while ancetre and ancetre != "inconnu" and ancetre not in par_espece:
+            ancetre = POKEAPI.get(ancetre)
+        if not ancetre or ancetre == "inconnu":
+            continue
+        for pid in par_espece[nom] + par_espece[ancetre]:
+            a, b = racine(pid), racine(par_espece[ancetre][0])
+            if a != b:
+                rapport.append(f"{p_nom(pokemon, pid)} : même famille que {p_nom(pokemon, par_espece[ancetre][0])} d'après PokeAPI seul")
+                parent[max(a, b)] = min(a, b)
     for p in pokemon:
         p["famille"] = racine(p["id"])
 

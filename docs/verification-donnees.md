@@ -1,6 +1,6 @@
 # Vérification des données
 
-Généré par `outils/construire_donnees.py` le 29/10/2026. Ne pas modifier à la main : relancer le script.
+Généré par `outils/construire_donnees.py` le 31/10/2026. Ne pas modifier à la main : relancer le script.
 
 - Pokémon : 369 (308 jeu de base, 9 événement, 52 DLC Bubbly Basin)
 - Pokémon avec un point à vérifier en jeu : 2
@@ -21,6 +21,35 @@ Généré par `outils/construire_donnees.py` le 29/10/2026. Ne pas modifier à l
 - Meowth : évolution « perrserker » inconnue de Serebii
 - Mr. Mime : évolution « mr-rime » inconnue de Serebii
 - Scyther : évolution « kleavor » inconnue de Serebii
+- Brionne : même famille que Popplio d'après PokeAPI seul
+- Cloyster : même famille que Shellder d'après PokeAPI seul
+- Crawdaunt : même famille que Corphish d'après PokeAPI seul
+- Croconaw : même famille que Totodile d'après PokeAPI seul
+- Drednaw : même famille que Chewtle d'après PokeAPI seul
+- Feraligatr : même famille que Croconaw d'après PokeAPI seul
+- Floatzel : même famille que Buizel d'après PokeAPI seul
+- Gastrodon : même famille que Shellos d'après PokeAPI seul
+- Gastrodon East Sea : même famille que Shellos d'après PokeAPI seul
+- Shellos East Sea : même famille que Shellos d'après PokeAPI seul
+- Golisopod : même famille que Wimpod d'après PokeAPI seul
+- Gourgeist : même famille que Pumpkaboo d'après PokeAPI seul
+- Jellicent Female Form : même famille que Frillish Female Form d'après PokeAPI seul
+- Jellicent Male Form : même famille que Frillish Female Form d'après PokeAPI seul
+- Frillish Male Form : même famille que Frillish Female Form d'après PokeAPI seul
+- Kingdra : même famille que Seadra d'après PokeAPI seul
+- Lanturn : même famille que Chinchou d'après PokeAPI seul
+- Lumineon : même famille que Finneon d'après PokeAPI seul
+- Malamar : même famille que Inkay d'après PokeAPI seul
+- Marshtomp : même famille que Mudkip d'après PokeAPI seul
+- Primarina : même famille que Brionne d'après PokeAPI seul
+- Seadra : même famille que Horsea d'après PokeAPI seul
+- Sharpedo : même famille que Carvanha d'après PokeAPI seul
+- Starmie : même famille que Staryu d'après PokeAPI seul
+- Swampert : même famille que Marshtomp d'après PokeAPI seul
+- Toxapex : même famille que Mareanie d'après PokeAPI seul
+- Toxtricity Low Key Form : même famille que Toxel d'après PokeAPI seul
+- Whiscash : même famille que Barboach d'après PokeAPI seul
+- Wugtrio : même famille que Wiglett d'après PokeAPI seul
 - Brionne : aime « groupactivities » sur sa fiche, absent de la page du goût
 - Buizel : aime « groupactivities » sur sa fiche, absent de la page du goût
 - Carvanha : aime « groupactivities » sur sa fiche, absent de la page du goût

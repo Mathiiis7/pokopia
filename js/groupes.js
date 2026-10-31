@@ -13,6 +13,7 @@
 
 export const TAILLE_MAISON = 4;
 export const GOUTS_A_COUVRIR = 4;
+const GOUTS_EN_COMMUN = 3;
 export const USAGES = ["repos", "deco", "jouet"];
 const OBJETS_PAR_GOUT = 12;
 
@@ -152,11 +153,10 @@ function goutsDifferents(maison, masques) {
 
 
 // ---------- Familles d'évolution ----------
-// Choix de Mathis (29/10/2026) : une famille vit ensemble. Dans un même environnement,
-// une famille de 3 ou 4 a sa maison à elle ; une famille de 2 ne cohabite qu'avec une autre
-// famille de 2, et reste à deux s'il n'y en a plus (31/10/2026) ; les Pokémon seuls se
-// regroupent entre eux. Une famille de 4 au plus dont l'environnement diffère vit quand même
-// ensemble (31/10/2026) ; une plus grande (Évoli, 9) est séparée par environnement.
+// Choix de Mathis (31/10/2026) : une famille vit ensemble et deux familles ne se mélangent jamais.
+// Les Pokémon sans évolution se regroupent entre eux, ou rejoignent une famille s'ils ont vraiment
+// ses goûts (voir accueillir). Une famille de 4 au plus dont l'environnement diffère vit quand même
+// ensemble ; une plus grande (Évoli, 9) est séparée par environnement.
 
 // Environnement d'une maison : celui du plus grand nombre, à égalité celui de la dernière évolution.
 function environnementCommun(membres) {
@@ -263,14 +263,46 @@ function remplir(unitesMemeTaille, cout) {
   return maisons;
 }
 
-function partagerEnvironnement(pokemon, masques) {
+const sansEvolution = (unite) => unite.length === 1 && (unite[0].tailleFamille ?? 1) === 1;
+
+// Places prises dans la maison d'une famille : ses membres pas encore cochés gardent la leur,
+// pour qu'un invité n'ait pas à déménager le jour où ils arrivent.
+function placesPrises(maison) {
+  const famille = maison[0];
+  const total = famille[0].tailleFamille ?? famille.length;
+  return taille(maison) + (total <= TAILLE_MAISON ? total - famille.length : 0);
+}
+
+// Un Pokémon sans évolution rejoint une famille seulement s'il a au moins 3 de ses 5 goûts en
+// commun avec chaque habitant et si la maison reste comblée sans un objet de plus. Les meilleurs
+// accords passent d'abord ; renvoie ceux qui restent sans famille.
+function accueillir(familles, seuls, prep) {
+  const restants = [...seuls];
+  for (;;) {
+    let meilleur = null;
+    for (const maison of familles) {
+      if (placesPrises(maison) >= TAILLE_MAISON) continue;
+      const habitants = plat(maison);
+      for (const unite of restants) {
+        const communs = Math.min(...habitants.map((p) => p.gouts.filter((g) => unite[0].gouts.includes(g)).length));
+        if (communs < GOUTS_EN_COMMUN || (meilleur && communs <= meilleur.communs)) continue;
+        const avec = objetsPourMaison([...habitants, ...unite], prep);
+        if (avec.manques.length || avec.objets.length > objetsPourMaison(habitants, prep).objets.length) continue;
+        meilleur = { maison, unite, communs };
+      }
+    }
+    if (!meilleur) return restants;
+    meilleur.maison.push(meilleur.unite);
+    restants.splice(restants.indexOf(meilleur.unite), 1);
+  }
+}
+
+function partagerEnvironnement(pokemon, masques, prep) {
   const cout = (m) => goutsDifferents(m, masques);
   const toutes = unites(pokemon);
-  const fixes = toutes.filter((u) => u.length >= 3).map((u) => [u]);
-  // deux listes à part : une famille de 2 ne se mêle jamais à des Pokémon seuls
-  const paires = remplir(toutes.filter((u) => u.length === 2), cout);
-  const seuls = remplir(toutes.filter((u) => u.length === 1), cout);
-  return { fixes, paires, seuls };
+  const fixes = toutes.filter((u) => !sansEvolution(u)).map((u) => [u]);
+  const seuls = remplir(accueillir(fixes, toutes.filter(sansEvolution), prep), cout);
+  return { fixes, seuls };
 }
 
 // Coût réel d'une maison : pas comblé >> nombre d'objets >> goûts couverts (qui le baissent un peu).
@@ -321,10 +353,10 @@ export function formerMaisons(pokemon, objets, verrouillees = [], essaisFinition
       : { habitants, verrouillee: true, environnement });
   }
   for (const [environnement, groupe] of [...parEnv].sort(([a], [b]) => a.localeCompare(b))) {
-    const { fixes, paires, seuls } = partagerEnvironnement(groupe, masques);
+    const { fixes, seuls } = partagerEnvironnement(groupe, masques, prep);
     const memo = new Map();
-    for (const souples of [paires, seuls]) ameliorer(souples, (m) => coutReel(m, prep, memo), 1, () => memo.size > essaisFinition);
-    for (const m of [...fixes, ...paires, ...seuls]) maisons.push({ habitants: plat(m), verrouillee: false, environnement, famille: m.length === 1 && m[0].length > 1 });
+    ameliorer(seuls, (m) => coutReel(m, prep, memo), 1, () => memo.size > essaisFinition);
+    for (const m of [...fixes, ...seuls]) maisons.push({ habitants: plat(m), verrouillee: false, environnement, famille: m.length === 1 && m[0].length > 1 });
   }
   const parNum = (a, b) => a.num - b.num || a.id.localeCompare(b.id);
   return [...finales, ...maisons]

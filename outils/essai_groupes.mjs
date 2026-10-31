@@ -6,6 +6,9 @@ import { formerMaisons } from "../js/groupes.js";
 const d = JSON.parse(readFileSync(new URL("../donnees/pokopia.json", import.meta.url), "utf-8"));
 const mode = process.argv[2] || "base";
 const pokemon = d.pokemon.filter((p) => p.gouts.length === 5 && (mode === "tout" || p.groupe === "base"));
+const tailles = new Map();
+for (const p of d.pokemon) tailles.set(p.famille, (tailles.get(p.famille) || 0) + 1);
+for (const p of pokemon) p.tailleFamille = tailles.get(p.famille);
 const fr = Object.fromEntries(d.gouts.map((g) => [g.id, g.fr]));
 
 const debut = performance.now();
