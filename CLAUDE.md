@@ -17,6 +17,7 @@ Guide perso de Mathis pour le jeu Pokémon Pokopia (Switch 2, mars 2026) : il co
 - Maisons de 4 Pokémon du **même environnement** (cohabiter ailleurs est possible mais pas idéal).
 - **Chaque famille d'évolution a sa maison, deux familles ne se mélangent jamais** (31/10/2026, remplace « une famille de 2 avec une autre famille de 2 »). Une famille de 4 au plus dont l'environnement diffère vit quand même ensemble (Toudoudou avec Rondoudou et Grodoudou), une plus grande (Évoli) est séparée par environnement. Liens d'évolution : Pokopia Guide, complétés par PokeAPI là où il en manque (les liens ajoutés sont listés dans `docs/verification-donnees.md`).
 - **Les Pokémon sans évolution** se regroupent entre eux, ou rejoignent une famille s'ils ont vraiment ses goûts. Seuil tranché par Claude, à ajuster si Mathis le veut : au moins 3 goûts sur 5 en commun avec chaque habitant, tous comblés, aucun objet de plus. Un Pokémon coché seul dont la famille existe dans le jeu n'est pas « sans évolution » : il garde sa maison et la place de ses membres pas encore cochés.
+- **Exception voulue** (31/10/2026) : Insécateur, Cizayox, Scarabrute et Scarhino vivent ensemble (`MAISONS_VOULUES` dans `js/groupes.js`, pour d'autres maisons imposées aussi).
 - Une maison « construite » garde ses habitants et ses objets ; le calcul ne la touche plus.
 - Groupes calculés au choix sur ses Pokémon cochés ou sur tout le jeu ; il n'a pas la zone DLC (Bubbly Basin).
 - Coches partagées automatiquement entre téléphone et ordi, avec un compte ; icône sur l'écran d'accueil.

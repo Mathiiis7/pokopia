@@ -16,6 +16,8 @@ export const GOUTS_A_COUVRIR = 4;
 const GOUTS_EN_COMMUN = 3;
 export const USAGES = ["repos", "deco", "jouet"];
 const OBJETS_PAR_GOUT = 12;
+// Maisons choisies par Mathis : elles passent avant le calcul et gardent leurs places libres.
+const MAISONS_VOULUES = [["scyther", "scizor", "pinsir", "heracross"]];
 
 // Valeur d'un goût couvert par un objet : testé en jeu par JoeNesTeam > vu seulement sur Serebii.
 function valeur(objet, gout) {
@@ -329,7 +331,9 @@ export function formerMaisons(pokemon, objets, verrouillees = [], essaisFinition
   // maison construite : { habitants: [ids], objets: [ids] } (ou l'ancienne forme, une simple liste d'ids)
   verrouillees = verrouillees.map((v) => (Array.isArray(v) ? { habitants: v, objets: null } : v));
   const pris = new Set(verrouillees.flatMap((v) => v.habitants));
-  const aLoger = pokemon.filter((p) => !pris.has(p.id) && p.environnement && p.gouts.length >= 5);
+  const logeables = pokemon.filter((p) => !pris.has(p.id) && p.environnement && p.gouts.length >= 5);
+  const voulues = MAISONS_VOULUES.map((ids) => logeables.filter((p) => ids.includes(p.id))).filter((m) => m.length);
+  const aLoger = logeables.filter((p) => !voulues.flat().includes(p));
   const logement = environnementsDeLogement(aLoger);
   const parEnv = new Map();
   for (const p of aLoger) {
@@ -340,6 +344,7 @@ export function formerMaisons(pokemon, objets, verrouillees = [], essaisFinition
   const parIdObjet = new Map(objets.map((o) => [o.id, o]));
   const maisons = [];
   const finales = [];
+  for (const habitants of voulues) maisons.push({ habitants, verrouillee: false, environnement: environnementCommun(habitants), famille: false });
   for (const v of verrouillees) {
     const habitants = v.habitants.map((id) => parId.get(id)).filter(Boolean);
     if (!habitants.length) continue;
